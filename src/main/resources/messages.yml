@@ -2,73 +2,120 @@
 
 # General messages
 general:
-  no-permission: "&cYou don't have permission to do that."
-  player-only: "&cThis command can only be used by players."
-  invalid-args: "&cInvalid arguments. Usage: %usage%"
-  player-not-found: "&cPlayer %player% not found."
-  reload-success: "&aAll configuration files have been reloaded."
+  no-permission: "&cDu hast keine Berechtigung dafür."
+  player-only: "&cDieser Befehl kann nur von Spielern verwendet werden."
+  invalid-args: "&cUngültige Argumente. Verwendung: %usage%"
+  player-not-found: "&cSpieler %player% wurde nicht gefunden."
+  reload-success: "&aAlle Konfigurationsdateien wurden neu geladen."
   
 # Economy messages
 economy:
-  balance: "&aYour balance: %balance% %currency%"
-  balance-other: "&a%player%'s balance: %balance% %currency%"
-  pay-success: "&aYou have sent %amount% %currency% to %player%."
-  pay-received: "&aYou have received %amount% %currency% from %player%."
-  not-enough-money: "&cYou don't have enough money."
+  balance: "&aDein Guthaben: %balance% %currency%"
+  balance-other: "&a%player%'s Guthaben: %balance% %currency%"
+  pay-success: "&aDu hast %amount% %currency% an %player% gesendet."
+  pay-received: "&aDu hast %amount% %currency% von %player% erhalten."
+  not-enough-money: "&cDu hast nicht genug Geld."
   
 # Teleportation messages
 teleport:
-  teleporting: "&aTeleporting in %seconds% seconds. Don't move!"
-  teleport-cancelled: "&cTeleportation cancelled due to movement."
-  teleport-success: "&aYou have been teleported."
-  teleport-request-sent: "&aTeleport request sent to %player%."
-  teleport-request-received: "&a%player% wants to teleport to you. Use /tpaccept or /tpdeny."
-  teleport-request-accepted: "&a%player% accepted your teleport request."
-  teleport-request-denied: "&c%player% denied your teleport request."
-  teleport-no-requests: "&cYou don't have any pending teleport requests."
-  teleport-cooldown: "&cYou must wait %seconds% seconds before teleporting again."
+  teleporting: "&aTeleportiere in %seconds% Sekunden. Bewege dich nicht!"
+  teleport-cancelled: "&cTeleportation abgebrochen durch Bewegung."
+  teleport-success: "&aDu wurdest teleportiert."
+  teleport-request-sent: "&aTeleportanfrage an %player% gesendet."
+  teleport-request-received: "&a%player% möchte sich zu dir teleportieren. Verwende /tpaccept oder /tpdeny."
+  teleport-request-accepted: "&a%player% hat deine Teleportanfrage akzeptiert."
+  teleport-request-denied: "&c%player% hat deine Teleportanfrage abgelehnt."
+  teleport-no-requests: "&cDu hast keine ausstehenden Teleportanfragen."
+  teleport-cooldown: "&cDu musst %seconds% Sekunden warten, bevor du dich wieder teleportieren kannst."
   
 # Home messages
 home:
-  home-set: "&aHome '%home%' has been set."
-  home-deleted: "&aHome '%home%' has been deleted."
-  home-teleport: "&aTeleporting to home '%home%'."
-  home-not-found: "&cHome '%home%' not found."
-  home-list: "&aYour homes: %homes%"
-  home-limit-reached: "&cYou have reached your home limit (%limit%)."
+  home-set: "&aZuhause '%home%' wurde gesetzt."
+  home-deleted: "&aZuhause '%home%' wurde gelöscht."
+  home-teleport: "&aTeleportiere zu Zuhause '%home%'."
+  home-not-found: "&cZuhause '%home%' nicht gefunden."
+  home-list: "&aDeine Zuhause: %homes%"
+  home-limit-reached: "&cDu hast dein Zuhause-Limit erreicht (%limit%)."
   
 # Warp messages
 warp:
-  warp-created: "&aWarp '%warp%' has been created."
-  warp-deleted: "&aWarp '%warp%' has been deleted."
-  warp-teleport: "&aTeleporting to warp '%warp%'."
-  warp-not-found: "&cWarp '%warp%' not found."
-  warp-list: "&aAvailable warps: %warps%"
+  warp-created: "&aWarp '%warp%' wurde erstellt."
+  warp-deleted: "&aWarp '%warp%' wurde gelöscht."
+  warp-teleport: "&aTeleportiere zu Warp '%warp%'."
+  warp-not-found: "&cWarp '%warp%' nicht gefunden."
+  warp-list: "&aVerfügbare Warps: %warps%"
+  warp-menu-title: "&8[&6Warp-Menü&8]"
+  warp-menu-item: "&a%warp%"
+  warp-menu-tooltip: "&7Klicke zum Teleportieren zu &6%warp%"
   
 # Claim messages
 claim:
-  claim-created: "&aYou have claimed this area."
-  claim-deleted: "&aYou have unclaimed this area."
-  claim-info: "&aThis claim belongs to %player%."
-  claim-enter: "&aEntering %player%'s claim."
-  claim-leave: "&aLeaving %player%'s claim."
-  claim-limit-reached: "&cYou have reached your claim limit (%limit%)."
-  cannot-build: "&cYou cannot build here. This area is claimed by %player%."
+  claim-created: "&aDu hast dieses Gebiet beansprucht."
+  claim-deleted: "&aDu hast diesen Anspruch aufgehoben."
+  claim-info: "&aDieser Anspruch gehört %player%."
+  claim-enter: "&aBetrete %player%'s Anspruch."
+  claim-leave: "&aVerlasse %player%'s Anspruch."
+  claim-limit-reached: "&cDu hast dein Anspruchslimit erreicht (%limit%)."
+  cannot-build: "&cDu kannst hier nicht bauen. Dieses Gebiet wird von %player% beansprucht."
   
 # Chat messages
 chat:
-  chat-muted: "&cThe chat is currently muted."
-  chat-unmuted: "&aThe chat has been unmuted."
-  chat-cleared: "&aThe chat has been cleared."
-  chat-cooldown: "&cYou must wait %seconds% seconds before chatting again."
+  chat-muted: "&cDer Chat ist derzeit stumm geschaltet."
+  chat-unmuted: "&aDer Chat wurde aktiviert."
+  chat-cleared: "&aDer Chat wurde gelöscht."
+  chat-cooldown: "&cDu musst %seconds% Sekunden warten, bevor du wieder chatten kannst."
   
 # Admin messages
 admin:
-  gamemode-changed: "&aYour gamemode has been changed to %gamemode%."
-  gamemode-changed-other: "&a%player%'s gamemode has been changed to %gamemode%."
-  vanish-enabled: "&aYou are now invisible to other players."
-  vanish-disabled: "&aYou are now visible to other players."
-  god-enabled: "&aGod mode enabled."
-  god-disabled: "&aGod mode disabled."
-  fly-enabled: "&aFlight enabled."
-  fly-disabled: "&aFlight disabled."
+  gamemode-changed: "&aDein Spielmodus wurde zu %gamemode% geändert."
+  gamemode-changed-other: "&a%player%'s Spielmodus wurde zu %gamemode% geändert."
+  vanish-enabled: "&aDu bist jetzt für andere Spieler unsichtbar."
+  vanish-disabled: "&aDu bist jetzt für andere Spieler sichtbar."
+  god-enabled: "&aGott-Modus aktiviert."
+  god-disabled: "&aGott-Modus deaktiviert."
+  fly-enabled: "&aFlug aktiviert."
+  fly-disabled: "&aFlug deaktiviert."
+
+# Discord Integration
+discord:
+  linked: "&aDein Discord-Account wurde erfolgreich verknüpft."
+  unlinked: "&aDein Discord-Account wurde getrennt."
+  link-code: "&aDein Verknüpfungscode lautet: &6%code% &aGib ihn im Discord-Bot ein."
+  already-linked: "&cDein Account ist bereits verknüpft."
+  not-linked: "&cDein Account ist nicht verknüpft."
+
+# Shop System
+shop:
+  item-bought: "&aDu hast &6%amount%x %item% &afür &6%price% %currency% &agekauft."
+  item-sold: "&aDu hast &6%amount%x %item% &afür &6%price% %currency% &averkauft."
+  not-enough-money: "&cDu hast nicht genug Geld, um das zu kaufen."
+  not-enough-items: "&cDu hast nicht genug Items, um das zu verkaufen."
+  shop-menu-title: "&8[&6Shop&8]"
+  category-menu-title: "&8[&6Kategorie: %category%&8]"
+  buy-price: "&aKaufen: &6%price% %currency%"
+  sell-price: "&aVerkaufen: &6%price% %currency%"
+  click-to-buy: "&7Linksklick zum Kaufen"
+  click-to-sell: "&7Rechtsklick zum Verkaufen"
+
+# Verlosung (Lottery)
+lottery:
+  ticket-bought: "&aDu hast ein Lotterielos für &6%price% %currency% &agekauft."
+  not-enough-money: "&cDu hast nicht genug Geld, um ein Los zu kaufen."
+  draw-announcement: "&aDie Verlosung beginnt in &6%time% &aMinuten!"
+  winner-announcement: "&a%player% &ahat die Verlosung gewonnen und erhält &6%prize% %currency%&a!"
+  no-participants: "&cDie Verlosung findet nicht statt, da es keine Teilnehmer gibt."
+  already-bought: "&cDu hast bereits ein Los für diese Verlosung gekauft."
+  tickets-owned: "&aDu besitzt &6%tickets% &aLos(e) für die aktuelle Verlosung."
+  current-pot: "&aDer aktuelle Gewinnpool beträgt &6%amount% %currency%&a."
+  lottery-info: "&aVerlosung endet in &6%time% &aMinuten. Lose kosten &6%price% %currency%&a."
+
+# Rewards
+rewards:
+  daily-claimed: "&aDu hast deine tägliche Belohnung von &6%amount% %currency% &aerhalten."
+  weekly-claimed: "&aDu hast deine wöchentliche Belohnung von &6%amount% %currency% &aerhalten."
+  monthly-claimed: "&aDu hast deine monatliche Belohnung von &6%amount% %currency% &aerhalten."
+  special-claimed: "&aDu hast eine spezielle Belohnung erhalten: &6%reward%&a."
+  already-claimed-daily: "&cDu hast deine tägliche Belohnung bereits abgeholt. Nächste Belohnung in &6%time%&c."
+  already-claimed-weekly: "&cDu hast deine wöchentliche Belohnung bereits abgeholt. Nächste Belohnung in &6%time%&c."
+  already-claimed-monthly: "&cDu hast deine monatliche Belohnung bereits abgeholt. Nächste Belohnung in &6%time%&c."
+  streak-bonus: "&aDu hast einen &6%days%-Tage-Streak &aund erhältst einen Bonus von &6%bonus% %currency%&a!"

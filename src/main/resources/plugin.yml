@@ -2,169 +2,242 @@ name: Sumania
 version: '1.0-SNAPSHOT'
 main: ch.retaxo.sumania.Sumania
 api-version: '1.21'
-description: 'A comprehensive SMP server plugin with economy, teleportation, claims, and more.'
+description: 'Ein umfassendes SMP-Server-Plugin mit Wirtschaft, Teleportation, Claims und mehr.'
 authors: [retaxo]
 
 commands:
   sumania:
-    description: Main plugin command
+    description: Hauptbefehl des Plugins
     usage: /sumania [reload]
     permission: sumania.admin
   
   # Economy commands
   balance:
-    description: Check your balance
-    usage: /balance [player]
-    aliases: [bal, money]
+    description: Prüfe dein Guthaben
+    usage: /balance [Spieler]
+    aliases: [bal, money, geld, konto]
     permission: sumania.economy.balance
   pay:
-    description: Pay another player
-    usage: /pay <player> <amount>
+    description: Bezahle einen anderen Spieler
+    usage: /pay <Spieler> <Betrag>
+    aliases: [bezahlen, zahlen]
     permission: sumania.economy.pay
   
   # Teleport commands
   tp:
-    description: Teleport to a player
-    usage: /tp <player> [target]
+    description: Teleportiere zu einem Spieler
+    usage: /tp <Spieler> [Ziel]
     permission: sumania.teleport.tp
   tpa:
-    description: Request to teleport to a player
-    usage: /tpa <player>
+    description: Anfrage, sich zu einem Spieler zu teleportieren
+    usage: /tpa <Spieler>
     permission: sumania.teleport.tpa
   tpaccept:
-    description: Accept a teleport request
+    description: Akzeptiere eine Teleportanfrage
     usage: /tpaccept
+    aliases: [tpja]
     permission: sumania.teleport.tpaccept
   tpdeny:
-    description: Deny a teleport request
+    description: Lehne eine Teleportanfrage ab
     usage: /tpdeny
+    aliases: [tpnein]
     permission: sumania.teleport.tpdeny
   
   # Home commands
   home:
-    description: Teleport to your home
-    usage: /home [name]
+    description: Teleportiere zu deinem Zuhause
+    usage: /home [Name]
+    aliases: [zuhause]
     permission: sumania.home.home
   sethome:
-    description: Set your home
-    usage: /sethome [name]
+    description: Setze dein Zuhause
+    usage: /sethome [Name]
+    aliases: [setzuhause]
     permission: sumania.home.set
   delhome:
-    description: Delete your home
-    usage: /delhome [name]
+    description: Lösche dein Zuhause
+    usage: /delhome [Name]
+    aliases: [delzuhause, löschezuhause, löschehome]
     permission: sumania.home.delete
   homes:
-    description: List your homes
+    description: Liste deine Zuhause auf
     usage: /homes
+    aliases: [zuhause-liste, homelist]
     permission: sumania.home.list
   
   # Warp commands
   warp:
-    description: Teleport to a warp
-    usage: /warp <name>
+    description: Teleportiere zu einem Warp
+    usage: /warp <Name>
     permission: sumania.warp.use
   setwarp:
-    description: Set a warp
-    usage: /setwarp <name>
+    description: Setze einen Warp
+    usage: /setwarp <Name>
     permission: sumania.warp.set
   delwarp:
-    description: Delete a warp
-    usage: /delwarp <name>
+    description: Lösche einen Warp
+    usage: /delwarp <Name>
     permission: sumania.warp.delete
   warps:
-    description: List all warps
+    description: Liste alle Warps auf
     usage: /warps
+    aliases: [warplist]
     permission: sumania.warp.list
+  warpmenu:
+    description: Öffne das Warp-Menü
+    usage: /warpmenu
+    aliases: [wm, warps-menu]
+    permission: sumania.warp.menu
   
   # Chat commands
   chat:
-    description: Chat management commands
+    description: Chat-Verwaltungsbefehle
     usage: /chat [mute|unmute|clear]
     permission: sumania.chat
+    
+  # Discord commands
+  discord:
+    description: Discord-Verknüpfungsbefehle
+    usage: /discord [link|unlink]
+    aliases: [dc]
+    permission: sumania.discord
+    
+  # Shop commands
+  shop:
+    description: Öffne den Shop
+    usage: /shop [Kategorie]
+    aliases: [store, markt, laden]
+    permission: sumania.shop
+    
+  # Lottery commands
+  lottery:
+    description: Verlosungsbefehle
+    usage: /lottery [buy|info]
+    aliases: [verlosung, lotto]
+    permission: sumania.lottery
+    
+  # Rewards commands
+  rewards:
+    description: Belohnungsbefehle
+    usage: /rewards [daily|weekly|monthly]
+    aliases: [belohnungen, reward, belohnung]
+    permission: sumania.rewards
 
 permissions:
   sumania.admin:
-    description: Allows access to admin commands
+    description: Erlaubt Zugriff auf Admin-Befehle
     default: op
   sumania.admin.reload:
-    description: Allows reloading the plugin
+    description: Erlaubt das Neuladen des Plugins
     default: op
   
   # Economy permissions
   sumania.economy.balance:
-    description: Allows checking your own balance
+    description: Erlaubt das Prüfen des eigenen Guthabens
     default: true
   sumania.economy.balance.others:
-    description: Allows checking other players' balances
+    description: Erlaubt das Prüfen des Guthabens anderer Spieler
     default: op
   sumania.economy.pay:
-    description: Allows paying other players
+    description: Erlaubt das Bezahlen anderer Spieler
     default: true
   
   # Teleport permissions
   sumania.teleport.tp:
-    description: Allows teleporting to other players
+    description: Erlaubt das Teleportieren zu anderen Spielern
     default: op
   sumania.teleport.tp.others:
-    description: Allows teleporting other players
+    description: Erlaubt das Teleportieren anderer Spieler
     default: op
   sumania.teleport.tpa:
-    description: Allows requesting to teleport to other players
+    description: Erlaubt das Anfragen von Teleportationen zu anderen Spielern
     default: true
   sumania.teleport.tpaccept:
-    description: Allows accepting teleport requests
+    description: Erlaubt das Akzeptieren von Teleportanfragen
     default: true
   sumania.teleport.tpdeny:
-    description: Allows denying teleport requests
+    description: Erlaubt das Ablehnen von Teleportanfragen
     default: true
   
   # Home permissions
   sumania.home.home:
-    description: Allows teleporting to homes
+    description: Erlaubt das Teleportieren zu Zuhause
     default: true
   sumania.home.set:
-    description: Allows setting homes
+    description: Erlaubt das Setzen von Zuhause
     default: true
   sumania.home.delete:
-    description: Allows deleting homes
+    description: Erlaubt das Löschen von Zuhause
     default: true
   sumania.home.list:
-    description: Allows listing homes
+    description: Erlaubt das Auflisten von Zuhause
     default: true
   sumania.home.bypass.limit:
-    description: Allows bypassing the home limit
+    description: Erlaubt das Umgehen des Zuhause-Limits
     default: op
   
   # Warp permissions
   sumania.warp.use:
-    description: Allows using warps
+    description: Erlaubt die Verwendung von Warps
     default: true
   sumania.warp.use.*:
-    description: Allows using all warps
+    description: Erlaubt die Verwendung aller Warps
     default: true
   sumania.warp.set:
-    description: Allows setting warps
+    description: Erlaubt das Setzen von Warps
     default: op
   sumania.warp.delete:
-    description: Allows deleting warps
+    description: Erlaubt das Löschen von Warps
     default: op
   sumania.warp.list:
-    description: Allows listing warps
+    description: Erlaubt das Auflisten von Warps
+    default: true
+  sumania.warp.menu:
+    description: Erlaubt das Öffnen des Warp-Menüs
     default: true
   
   # Chat permissions
   sumania.chat:
-    description: Allows access to chat commands
+    description: Erlaubt Zugriff auf Chat-Befehle
     default: true
   sumania.chat.mute:
-    description: Allows muting and unmuting the chat
+    description: Erlaubt das Stummschalten und Aktivieren des Chats
     default: op
   sumania.chat.clear:
-    description: Allows clearing the chat
+    description: Erlaubt das Löschen des Chats
     default: op
   sumania.chat.bypass.mute:
-    description: Allows talking in muted chat
+    description: Erlaubt das Sprechen im stummen Chat
     default: op
   sumania.chat.bypass.cooldown:
-    description: Allows bypassing chat cooldown
+    description: Erlaubt das Umgehen der Chat-Abklingzeit
+    default: op
+    
+  # Discord permissions
+  sumania.discord:
+    description: Erlaubt Zugriff auf Discord-Befehle
+    default: true
+    
+  # Shop permissions
+  sumania.shop:
+    description: Erlaubt Zugriff auf den Shop
+    default: true
+  sumania.shop.admin:
+    description: Erlaubt das Verwalten des Shops
+    default: op
+    
+  # Lottery permissions
+  sumania.lottery:
+    description: Erlaubt Zugriff auf Verlosungsbefehle
+    default: true
+  sumania.lottery.admin:
+    description: Erlaubt das Verwalten der Verlosung
+    default: op
+    
+  # Rewards permissions
+  sumania.rewards:
+    description: Erlaubt Zugriff auf Belohnungsbefehle
+    default: true
+  sumania.rewards.admin:
+    description: Erlaubt das Verwalten der Belohnungen
     default: op

@@ -40,7 +40,7 @@ public class ChatCommand implements CommandExecutor {
                             null
                     );
                 } else {
-                    sender.sendMessage("§cYou don't have permission to do that.");
+                    sender.sendMessage(plugin.getConfigManager().getPrefix() + "§cDu hast keine Berechtigung dafür.");
                 }
                 
                 return true;
@@ -59,7 +59,7 @@ public class ChatCommand implements CommandExecutor {
                             null
                     );
                 } else {
-                    sender.sendMessage("§cYou don't have permission to do that.");
+                    sender.sendMessage(plugin.getConfigManager().getPrefix() + "§cDu hast keine Berechtigung dafür.");
                 }
                 
                 return true;
@@ -78,7 +78,7 @@ public class ChatCommand implements CommandExecutor {
                             null
                     );
                 } else {
-                    sender.sendMessage("§cYou don't have permission to do that.");
+                    sender.sendMessage(plugin.getConfigManager().getPrefix() + "§cDu hast keine Berechtigung dafür.");
                 }
                 
                 return true;
@@ -98,15 +98,17 @@ public class ChatCommand implements CommandExecutor {
      * @param sender The command sender
      */
     private void sendHelp(CommandSender sender) {
-        sender.sendMessage("§8===== §6Sumania Chat §8=====");
+        String prefix = plugin.getConfigManager().getPrefix();
+        
+        sender.sendMessage(prefix + "§8===== §6Sumania Chat §8=====");
         
         if (sender.hasPermission("sumania.chat.mute")) {
-            sender.sendMessage("§6/chat mute §7- Mute the chat");
-            sender.sendMessage("§6/chat unmute §7- Unmute the chat");
+            sender.sendMessage(prefix + "§6/chat mute §7- Chat stummschalten");
+            sender.sendMessage(prefix + "§6/chat unmute §7- Chat aktivieren");
         }
         
         if (sender.hasPermission("sumania.chat.clear")) {
-            sender.sendMessage("§6/chat clear §7- Clear the chat");
+            sender.sendMessage(prefix + "§6/chat clear §7- Chat löschen");
         }
     }
 }

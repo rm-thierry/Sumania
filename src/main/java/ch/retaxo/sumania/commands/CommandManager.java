@@ -3,11 +3,16 @@ package ch.retaxo.sumania.commands;
 import ch.retaxo.sumania.Sumania;
 import ch.retaxo.sumania.commands.admin.ReloadCommand;
 import ch.retaxo.sumania.commands.chat.ChatCommand;
+import ch.retaxo.sumania.commands.discord.DiscordCommand;
 import ch.retaxo.sumania.commands.economy.BalanceCommand;
 import ch.retaxo.sumania.commands.economy.PayCommand;
+import ch.retaxo.sumania.commands.lottery.LotteryCommand;
+import ch.retaxo.sumania.commands.rewards.RewardsCommand;
+import ch.retaxo.sumania.commands.shop.ShopCommand;
 import ch.retaxo.sumania.commands.teleport.HomeCommand;
 import ch.retaxo.sumania.commands.teleport.TeleportCommand;
 import ch.retaxo.sumania.commands.teleport.WarpCommand;
+import ch.retaxo.sumania.commands.teleport.WarpMenuCommand;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -64,10 +69,31 @@ public class CommandManager {
             registerCommand("setwarp", new WarpCommand(plugin));
             registerCommand("delwarp", new WarpCommand(plugin));
             registerCommand("warps", new WarpCommand(plugin));
+            registerCommand("warpmenu", new WarpMenuCommand(plugin));
         }
         
         // Register chat commands
         registerCommand("chat", new ChatCommand(plugin));
+        
+        // Register discord commands if enabled
+        if (config.getBoolean("commands.discord", true)) {
+            registerCommand("discord", new DiscordCommand(plugin));
+        }
+        
+        // Register shop commands if enabled
+        if (config.getBoolean("commands.shop", true)) {
+            registerCommand("shop", new ShopCommand(plugin));
+        }
+        
+        // Register lottery commands if enabled
+        if (config.getBoolean("commands.lottery", true)) {
+            registerCommand("lottery", new LotteryCommand(plugin));
+        }
+        
+        // Register rewards commands if enabled
+        if (config.getBoolean("commands.rewards", true)) {
+            registerCommand("rewards", new RewardsCommand(plugin));
+        }
     }
     
     /**

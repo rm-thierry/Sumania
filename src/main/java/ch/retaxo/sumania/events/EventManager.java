@@ -1,6 +1,7 @@
 package ch.retaxo.sumania.events;
 
 import ch.retaxo.sumania.Sumania;
+import ch.retaxo.sumania.events.player.InventoryListener;
 import ch.retaxo.sumania.events.player.PlayerChatListener;
 import ch.retaxo.sumania.events.player.PlayerConnectionListener;
 import ch.retaxo.sumania.events.player.PlayerInteractListener;
@@ -34,6 +35,7 @@ public class EventManager {
         pm.registerEvents(new PlayerConnectionListener(plugin), plugin);
         pm.registerEvents(new PlayerChatListener(plugin), plugin);
         pm.registerEvents(new PlayerInteractListener(plugin), plugin);
+        pm.registerEvents(new InventoryListener(plugin), plugin);
         
         // Register protection event listeners
         pm.registerEvents(new BlockProtectionListener(plugin), plugin);

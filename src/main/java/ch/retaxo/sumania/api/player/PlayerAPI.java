@@ -192,6 +192,55 @@ public class PlayerAPI {
      * @param replacements The replacements to make in the message
      */
     public void sendMessage(Player player, String path, Map<String, String> replacements) {
-        player.sendMessage(getMessage(path, replacements));
+        // Get the prefix from the config
+        String prefix = plugin.getConfigManager().getPrefix();
+        
+        // Add prefix to the message
+        player.sendMessage(prefix + getMessage(path, replacements));
+    }
+    
+    /**
+     * Send a message to a command sender
+     * @param sender The command sender
+     * @param path The path to the message in messages.yml
+     * @param replacements The replacements to make in the message
+     */
+    public void sendMessage(CommandSender sender, String path, Map<String, String> replacements) {
+        if (sender instanceof Player) {
+            sendMessage((Player) sender, path, replacements);
+        } else {
+            // Get the prefix from the config
+            String prefix = plugin.getConfigManager().getPrefix();
+            
+            // Add prefix to the message
+            sender.sendMessage(prefix + getMessage(path, replacements));
+        }
+    }
+    
+    /**
+     * Send a direct message to a command sender with the prefix
+     * @param sender The command sender
+     * @param message The message to send
+     */
+    public void sendPrefixedMessage(CommandSender sender, String message) {
+        // Get the prefix from the config
+        String prefix = plugin.getConfigManager().getPrefix();
+        
+        // Add prefix to the message
+        sender.sendMessage(prefix + message);
+    }
+    
+    /**
+     * Format a message with the prefix
+     * @param path The path to the message in messages.yml
+     * @param replacements The replacements to make in the message
+     * @return The formatted message with prefix
+     */
+    public String formatMessage(String path, Map<String, String> replacements) {
+        // Get the prefix from the config
+        String prefix = plugin.getConfigManager().getPrefix();
+        
+        // Add prefix to the message
+        return prefix + getMessage(path, replacements);
     }
 }

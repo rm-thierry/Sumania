@@ -173,7 +173,11 @@ public class ChatAPI {
      * @param replacements The replacements to make in the message
      */
     public void broadcastMessage(String path, Map<String, String> replacements) {
-        String message = plugin.getAPI().getPlayerAPI().getMessage(path, replacements);
+        // Get the prefix from the config
+        String prefix = plugin.getConfigManager().getPrefix();
+        
+        // Add prefix to the message
+        String message = prefix + plugin.getAPI().getPlayerAPI().getMessage(path, replacements);
         broadcast(message);
     }
 }

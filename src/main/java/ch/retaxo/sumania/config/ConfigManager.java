@@ -6,6 +6,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,6 +22,9 @@ public class ConfigManager {
     // Main config keys
     private String prefix;
     private boolean debugMode;
+    private Connection dbConnection;
+    private String dbType;
+    private String tablePrefix;
     
     /**
      * Constructor
@@ -44,6 +51,9 @@ public class ConfigManager {
         
         // Load configuration values
         loadConfigValues();
+        
+        // Setup database connection
+        setupDatabase();
     }
     
     /**
@@ -77,6 +87,164 @@ public class ConfigManager {
         
         // Load debug mode
         debugMode = mainConfig.getBoolean("debug-mode", false);
+        
+        // Load database type
+        dbType = mainConfig.getString("database.type", "sqlite");
+        
+        // Load table prefix
+        tablePrefix = mainConfig.getString("database.table-prefix", "sumania_");
+    }
+    
+    /**
+     * Setup database connection
+     */
+    private void setupDatabase() {
+        FileConfiguration config = getConfig("config.yml");
+        boolean autoCreateTables = config.getBoolean("database.auto-create-tables", true);
+        
+        try {
+            if (dbType.equalsIgnoreCase("mysql")) {
+                // MySQL connection
+                String host = config.getString("database.mysql.host", "localhost");
+                int port = config.getInt("database.mysql.port", 3306);
+                String database = config.getString("database.mysql.database", "sumania");
+                String username = config.getString("database.mysql.username", "root");
+                String password = config.getString("database.mysql.password", "password");
+                boolean useSSL = config.getBoolean("database.mysql.use-ssl", false);
+                
+                String url = "jdbc:mysql://" + host + ":" + port + "/" + database + "?useSSL=" + useSSL;
+                
+                try {
+                    Class.forName("com.mysql.jdbc.Driver");
+                    dbConnection = DriverManager.getConnection(url, username, password);
+                    plugin.getLogger().info("Connected to MySQL database!");
+                } catch (ClassNotFoundException e) {
+                    plugin.getLogger().severe("MySQL driver not found. Falling back to SQLite...");
+                    setupSQLiteDatabase();
+                }
+            } else {
+                // SQLite connection
+                setupSQLiteDatabase();
+            }
+            
+            // Create tables if needed
+            if (autoCreateTables && dbConnection != null) {
+                createTables();
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().severe("Failed to connect to database: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Setup SQLite database connection
+     */
+    private void setupSQLiteDatabase() throws SQLException {
+        File databaseFile = new File(plugin.getDataFolder(), "sumania.db");
+        String url = "jdbc:sqlite:" + databaseFile.getAbsolutePath();
+        
+        dbConnection = DriverManager.getConnection(url);
+        plugin.getLogger().info("Connected to SQLite database!");
+    }
+    
+    /**
+     * Create database tables
+     */
+    private void createTables() throws SQLException {
+        // Players table
+        String playersTable = "CREATE TABLE IF NOT EXISTS " + tablePrefix + "players (" +
+                "uuid VARCHAR(36) PRIMARY KEY, " +
+                "name VARCHAR(16) NOT NULL, " +
+                "balance DOUBLE NOT NULL DEFAULT 0, " +
+                "last_login TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
+                "first_join TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
+                ")";
+        
+        // Homes table
+        String homesTable = "CREATE TABLE IF NOT EXISTS " + tablePrefix + "homes (" +
+                "id INTEGER PRIMARY KEY " + (dbType.equalsIgnoreCase("mysql") ? "AUTO_INCREMENT" : "AUTOINCREMENT") + ", " +
+                "uuid VARCHAR(36) NOT NULL, " +
+                "name VARCHAR(32) NOT NULL, " +
+                "world VARCHAR(64) NOT NULL, " +
+                "x DOUBLE NOT NULL, " +
+                "y DOUBLE NOT NULL, " +
+                "z DOUBLE NOT NULL, " +
+                "yaw FLOAT NOT NULL, " +
+                "pitch FLOAT NOT NULL, " +
+                "UNIQUE (uuid, name)" +
+                ")";
+        
+        // Warps table
+        String warpsTable = "CREATE TABLE IF NOT EXISTS " + tablePrefix + "warps (" +
+                "id INTEGER PRIMARY KEY " + (dbType.equalsIgnoreCase("mysql") ? "AUTO_INCREMENT" : "AUTOINCREMENT") + ", " +
+                "name VARCHAR(32) NOT NULL UNIQUE, " +
+                "world VARCHAR(64) NOT NULL, " +
+                "x DOUBLE NOT NULL, " +
+                "y DOUBLE NOT NULL, " +
+                "z DOUBLE NOT NULL, " +
+                "yaw FLOAT NOT NULL, " +
+                "pitch FLOAT NOT NULL" +
+                ")";
+        
+        // Claims table
+        String claimsTable = "CREATE TABLE IF NOT EXISTS " + tablePrefix + "claims (" +
+                "id INTEGER PRIMARY KEY " + (dbType.equalsIgnoreCase("mysql") ? "AUTO_INCREMENT" : "AUTOINCREMENT") + ", " +
+                "uuid VARCHAR(36) NOT NULL, " +
+                "world VARCHAR(64) NOT NULL, " +
+                "x1 INTEGER NOT NULL, " +
+                "y1 INTEGER NOT NULL, " +
+                "z1 INTEGER NOT NULL, " +
+                "x2 INTEGER NOT NULL, " +
+                "y2 INTEGER NOT NULL, " +
+                "z2 INTEGER NOT NULL" +
+                ")";
+        
+        // Discord links table
+        String discordTable = "CREATE TABLE IF NOT EXISTS " + tablePrefix + "discord_links (" +
+                "uuid VARCHAR(36) PRIMARY KEY, " +
+                "discord_id VARCHAR(20) NOT NULL UNIQUE, " +
+                "link_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
+                ")";
+        
+        // Lottery tickets table
+        String lotteryTable = "CREATE TABLE IF NOT EXISTS " + tablePrefix + "lottery_tickets (" +
+                "id INTEGER PRIMARY KEY " + (dbType.equalsIgnoreCase("mysql") ? "AUTO_INCREMENT" : "AUTOINCREMENT") + ", " +
+                "uuid VARCHAR(36) NOT NULL, " +
+                "draw_id INTEGER NOT NULL, " +
+                "purchase_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
+                "UNIQUE (uuid, draw_id)" +
+                ")";
+        
+        // Rewards table
+        String rewardsTable = "CREATE TABLE IF NOT EXISTS " + tablePrefix + "rewards (" +
+                "uuid VARCHAR(36) PRIMARY KEY, " +
+                "daily_claim TIMESTAMP NULL, " +
+                "weekly_claim TIMESTAMP NULL, " +
+                "monthly_claim TIMESTAMP NULL, " +
+                "streak_days INTEGER DEFAULT 0, " +
+                "last_streak_update TIMESTAMP NULL" +
+                ")";
+        
+        // Execute all queries
+        try (PreparedStatement playersStmt = dbConnection.prepareStatement(playersTable);
+             PreparedStatement homesStmt = dbConnection.prepareStatement(homesTable);
+             PreparedStatement warpsStmt = dbConnection.prepareStatement(warpsTable);
+             PreparedStatement claimsStmt = dbConnection.prepareStatement(claimsTable);
+             PreparedStatement discordStmt = dbConnection.prepareStatement(discordTable);
+             PreparedStatement lotteryStmt = dbConnection.prepareStatement(lotteryTable);
+             PreparedStatement rewardsStmt = dbConnection.prepareStatement(rewardsTable)) {
+            
+            playersStmt.executeUpdate();
+            homesStmt.executeUpdate();
+            warpsStmt.executeUpdate();
+            claimsStmt.executeUpdate();
+            discordStmt.executeUpdate();
+            lotteryStmt.executeUpdate();
+            rewardsStmt.executeUpdate();
+            
+            plugin.getLogger().info("Database tables created or verified!");
+        }
     }
     
     /**
@@ -146,5 +314,44 @@ public class ConfigManager {
      */
     public boolean isDebugMode() {
         return debugMode;
+    }
+    
+    /**
+     * Get the database connection
+     * @return The database connection
+     */
+    public Connection getDbConnection() {
+        return dbConnection;
+    }
+    
+    /**
+     * Get the database type
+     * @return The database type
+     */
+    public String getDbType() {
+        return dbType;
+    }
+    
+    /**
+     * Get the table prefix
+     * @return The table prefix
+     */
+    public String getTablePrefix() {
+        return tablePrefix;
+    }
+    
+    /**
+     * Close the database connection
+     */
+    public void closeDbConnection() {
+        if (dbConnection != null) {
+            try {
+                dbConnection.close();
+                plugin.getLogger().info("Database connection closed.");
+            } catch (SQLException e) {
+                plugin.getLogger().severe("Error closing database connection: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
     }
 }

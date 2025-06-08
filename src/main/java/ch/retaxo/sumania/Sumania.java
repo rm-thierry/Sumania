@@ -1,13 +1,16 @@
 package ch.retaxo.sumania;
 
 import org.bukkit.Bukkit;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.server.ServerListPingEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import ch.retaxo.sumania.config.ConfigManager;
 import ch.retaxo.sumania.api.SumaniaAPI;
 import ch.retaxo.sumania.commands.CommandManager;
 import ch.retaxo.sumania.events.EventManager;
 
-public final class Sumania extends JavaPlugin {
+public final class Sumania extends JavaPlugin implements Listener {
     
     private static Sumania instance;
     private ConfigManager configManager;
@@ -35,6 +38,9 @@ public final class Sumania extends JavaPlugin {
         eventManager = new EventManager(this);
         eventManager.registerEvents();
         
+        // Register this class as listener for MOTD
+        getServer().getPluginManager().registerEvents(this, this);
+        
         // Log startup
         Bukkit.getLogger().info(configManager.getPrefix() + "Plugin enabled successfully!");
     }
@@ -44,8 +50,32 @@ public final class Sumania extends JavaPlugin {
         // Save configs
         configManager.saveAllConfigs();
         
+        // Close database connection
+        configManager.closeDbConnection();
+        
         // Log shutdown
         Bukkit.getLogger().info(configManager.getPrefix() + "Plugin disabled successfully!");
+    }
+    
+    /**
+     * Handle server list ping event to customize MOTD
+     * @param event The server list ping event
+     */
+    @EventHandler
+    public void onServerListPing(ServerListPingEvent event) {
+        boolean motdEnabled = configManager.getConfig("config.yml").getBoolean("server.motd-enabled", true);
+        
+        if (motdEnabled) {
+            String motd = configManager.getConfig("config.yml").getString("server.motd", "§6Willkommen auf dem §lSumania SMP§r §6Server!");
+            String secondLine = configManager.getConfig("config.yml").getString("server.motd-second-line", "§eDein deutsches SMP-Erlebnis!");
+            
+            // Set MOTD with both lines
+            event.setMotd(motd + "\n" + secondLine);
+            
+            // Set max players from config
+            int maxPlayers = configManager.getConfig("config.yml").getInt("server.max-players", 100);
+            event.setMaxPlayers(maxPlayers);
+        }
     }
     
     /**

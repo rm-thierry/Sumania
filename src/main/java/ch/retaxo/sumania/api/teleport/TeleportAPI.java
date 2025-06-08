@@ -3,12 +3,22 @@ package ch.retaxo.sumania.api.teleport;
 import ch.retaxo.sumania.Sumania;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.NamespacedKey;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -405,5 +415,172 @@ public class TeleportAPI {
         }
         
         return warps;
+    }
+    
+    /**
+     * Open the warp menu for a player
+     * @param player The player to open the menu for
+     */
+    public void openWarpMenu(Player player) {
+        FileConfiguration config = plugin.getConfigManager().getConfig("config.yml");
+        FileConfiguration messages = plugin.getConfigManager().getConfig("messages.yml");
+        
+        // Check if warp menu is enabled
+        if (!config.getBoolean("teleportation.warp-menu-enabled", true)) {
+            plugin.getAPI().getPlayerAPI().sendMessage(
+                    player,
+                    "general.feature-disabled",
+                    null
+            );
+            return;
+        }
+        
+        // Get all warps
+        Map<String, Location> warps = getWarps();
+        
+        if (warps.isEmpty()) {
+            plugin.getAPI().getPlayerAPI().sendMessage(
+                    player,
+                    "warp.warp-list",
+                    Map.of("warps", "Keine")
+            );
+            return;
+        }
+        
+        // Get menu title
+        String menuTitle = messages.getString("warp.warp-menu-title", "&8[&6Warp-Menü&8]");
+        menuTitle = menuTitle.replace("&", "§");
+        
+        // Get menu rows (minimum 1, maximum 6)
+        int menuRows = Math.min(6, Math.max(1, config.getInt("teleportation.warp-menu-rows", 3)));
+        
+        // Create inventory
+        Inventory menu = Bukkit.createInventory(null, menuRows * 9, menuTitle);
+        
+        // Add warp items
+        int slot = 0;
+        for (Map.Entry<String, Location> entry : warps.entrySet()) {
+            String warpName = entry.getKey();
+            Location warpLocation = entry.getValue();
+            
+            // Skip if player doesn't have permission to use this warp
+            if (!player.hasPermission("sumania.warp.use." + warpName.toLowerCase()) &&
+                !player.hasPermission("sumania.warp.use.*")) {
+                continue;
+            }
+            
+            // Create item for warp
+            ItemStack item = createWarpItem(warpName, warpLocation);
+            
+            // Add to inventory if there's space
+            if (slot < menu.getSize()) {
+                menu.setItem(slot++, item);
+            } else {
+                break;
+            }
+        }
+        
+        // Open inventory for player
+        player.openInventory(menu);
+    }
+    
+    /**
+     * Create an item for the warp menu
+     * @param warpName The name of the warp
+     * @param location The location of the warp
+     * @return The item
+     */
+    private ItemStack createWarpItem(String warpName, Location location) {
+        FileConfiguration messages = plugin.getConfigManager().getConfig("messages.yml");
+        
+        // Determine item material based on location environment
+        Material material;
+        if (location.getWorld().getEnvironment() == World.Environment.NETHER) {
+            material = Material.NETHERRACK;
+        } else if (location.getWorld().getEnvironment() == World.Environment.THE_END) {
+            material = Material.END_STONE;
+        } else {
+            material = Material.GRASS_BLOCK;
+        }
+        
+        // Create item
+        ItemStack item = new ItemStack(material);
+        ItemMeta meta = item.getItemMeta();
+        
+        // Set display name
+        String displayName = messages.getString("warp.warp-menu-item", "&a%warp%");
+        displayName = displayName.replace("&", "§").replace("%warp%", warpName);
+        meta.setDisplayName(displayName);
+        
+        // Set lore
+        String tooltip = messages.getString("warp.warp-menu-tooltip", "&7Klicke zum Teleportieren zu &6%warp%");
+        tooltip = tooltip.replace("&", "§").replace("%warp%", warpName);
+        
+        // Add location info
+        List<String> lore = new ArrayList<>();
+        lore.add(tooltip);
+        lore.add("§7Welt: §e" + location.getWorld().getName());
+        lore.add(String.format("§7Position: §e%d, %d, %d", 
+                location.getBlockX(), location.getBlockY(), location.getBlockZ()));
+        
+        meta.setLore(lore);
+        
+        // Store warp name in item NBT
+        NamespacedKey key = new NamespacedKey(plugin, "warp-name");
+        meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, warpName);
+        
+        // Apply meta to item
+        item.setItemMeta(meta);
+        
+        return item;
+    }
+    
+    /**
+     * Handle inventory click in warp menu
+     * @param event The inventory click event
+     */
+    public void handleWarpMenuClick(InventoryClickEvent event) {
+        // Check if click is in warp menu
+        FileConfiguration messages = plugin.getConfigManager().getConfig("messages.yml");
+        String menuTitle = messages.getString("warp.warp-menu-title", "&8[&6Warp-Menü&8]");
+        menuTitle = menuTitle.replace("&", "§");
+        
+        if (event.getView().getTitle().equals(menuTitle)) {
+            event.setCancelled(true);
+            
+            // Check if clicked on an item
+            if (event.getCurrentItem() != null && event.getCurrentItem().hasItemMeta()) {
+                // Get warp name from item NBT
+                ItemMeta meta = event.getCurrentItem().getItemMeta();
+                NamespacedKey key = new NamespacedKey(plugin, "warp-name");
+                String warpName = meta.getPersistentDataContainer().get(key, PersistentDataType.STRING);
+                
+                if (warpName != null) {
+                    // Get player
+                    Player player = (Player) event.getWhoClicked();
+                    
+                    // Close inventory
+                    player.closeInventory();
+                    
+                    // Get warp location
+                    Location warpLocation = getWarp(warpName);
+                    
+                    if (warpLocation != null) {
+                        // Send teleport message
+                        Map<String, String> replacements = new HashMap<>();
+                        replacements.put("warp", warpName);
+                        
+                        plugin.getAPI().getPlayerAPI().sendMessage(
+                                player,
+                                "warp.warp-teleport",
+                                replacements
+                        );
+                        
+                        // Teleport player
+                        teleport(player, warpLocation);
+                    }
+                }
+            }
+        }
     }
 }

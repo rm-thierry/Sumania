@@ -1,16 +1,16 @@
-# Sumania Configuration File
+# Sumania Konfigurationsdatei
 
-# Prefix for all messages
+# Präfix für alle Nachrichten
 prefix: "§8[§6Sumania§8] §7"
 
-# Enable debug mode
+# Debug-Modus aktivieren
 debug-mode: false
 
-# Database configuration
+# Datenbank-Konfiguration
 database:
-  # Database type: sqlite or mysql
+  # Datenbanktyp: sqlite oder mysql
   type: sqlite
-  # MySQL configuration (only used if type is mysql)
+  # MySQL-Konfiguration (nur verwendet, wenn Typ mysql ist)
   mysql:
     host: localhost
     port: 3306
@@ -18,74 +18,180 @@ database:
     username: root
     password: password
     use-ssl: false
+  # Automatisch Tabellen erstellen
+  auto-create-tables: true
+  # Tabellenpräfix
+  table-prefix: "sumania_"
 
-# Server settings
+# Server-Einstellungen
 server:
-  # Server name
+  # Servername
   name: "Sumania SMP"
-  # Max players
+  # Maximale Spieleranzahl
   max-players: 100
-  # MOTD (Message of the day)
-  motd: "Welcome to Sumania SMP!"
+  # MOTD (Nachricht des Tages)
+  motd: "§6Willkommen auf dem §lSumania SMP§r §6Server!"
+  # MOTD zweite Zeile
+  motd-second-line: "§eDein deutsches SMP-Erlebnis!"
+  # MOTD aktivieren
+  motd-enabled: true
   
-# Game mechanics
+# Spielmechaniken
 mechanics:
-  # Enable custom crafting recipes
+  # Benutzerdefinierte Crafting-Rezepte aktivieren
   custom-recipes: true
-  # Enable custom mob spawning
+  # Benutzerdefiniertes Mob-Spawning aktivieren
   custom-mobs: true
-  # Enable custom enchantments
+  # Benutzerdefinierte Verzauberungen aktivieren
   custom-enchantments: true
-  # Enable custom items
+  # Benutzerdefinierte Items aktivieren
   custom-items: true
   
-# Economy settings
+# Wirtschaftseinstellungen
 economy:
-  # Enable economy
+  # Wirtschaft aktivieren
   enabled: true
-  # Starting balance
+  # Startguthaben
   starting-balance: 1000.0
-  # Currency name
+  # Währungsname
   currency-name: "Coins"
-  # Currency symbol
+  # Währungssymbol
   currency-symbol: "$"
 
-# Teleportation settings
+# Teleportationseinstellungen
 teleportation:
-  # Enable teleportation
+  # Teleportation aktivieren
   enabled: true
-  # Teleport delay (in seconds)
+  # Teleport-Verzögerung (in Sekunden)
   delay: 5
-  # Teleport cooldown (in seconds)
+  # Teleport-Abklingzeit (in Sekunden)
   cooldown: 60
+  # Warp-Menü aktivieren
+  warp-menu-enabled: true
+  # Warp-Menü-Reihen (1-6)
+  warp-menu-rows: 3
   
-# Protection settings
+# Schutzeinstellungen
 protection:
-  # Enable claim system
+  # Claim-System aktivieren
   claims-enabled: true
-  # Maximum claims per player
+  # Maximale Claims pro Spieler
   max-claims-per-player: 3
-  # Default claim size (blocks)
+  # Standardgröße des Claims (Blöcke)
   default-claim-size: 100
 
-# Chat settings
+# Chat-Einstellungen
 chat:
-  # Enable chat formatting
+  # Chat-Formatierung aktivieren
   format-enabled: true
-  # Chat format
+  # Chat-Format
   format: "§8[§6%rank%§8] §7%player% §8» §f%message%"
-  # Chat range (blocks, 0 for global)
+  # Chat-Reichweite (Blöcke, 0 für global)
   range: 0
   
-# Command settings
+# Befehlseinstellungen
 commands:
-  # Enable economy commands
+  # Wirtschaftsbefehle aktivieren
   economy: true
-  # Enable teleportation commands
+  # Teleportationsbefehle aktivieren
   teleport: true
-  # Enable home commands
+  # Zuhause-Befehle aktivieren
   home: true
-  # Enable warp commands
+  # Warp-Befehle aktivieren
   warp: true
-  # Enable spawn commands
+  # Spawn-Befehle aktivieren
   spawn: true
+  # Shop-Befehle aktivieren
+  shop: true
+  # Discord-Befehle aktivieren
+  discord: true
+  # Verlosungs-Befehle aktivieren
+  lottery: true
+  # Belohnungs-Befehle aktivieren
+  rewards: true
+
+# Discord-Integration
+discord:
+  # Discord-Integration aktivieren
+  enabled: true
+  # Bot-Token
+  bot-token: ""
+  # Server-ID
+  guild-id: ""
+  # Kanal-ID für Chat-Synchronisation
+  chat-channel-id: ""
+  # Kanal-ID für Server-Logs
+  log-channel-id: ""
+  # Rolle-ID für verifizierte Spieler
+  verified-role-id: ""
+
+# Shop-System
+shop:
+  # Shop-System aktivieren
+  enabled: true
+  # Shop-Kategorien
+  categories:
+    blocks:
+      display-name: "§aBlöcke"
+      icon: "GRASS_BLOCK"
+      items:
+        - item: "STONE"
+          buy-price: 10.0
+          sell-price: 5.0
+        - item: "GRASS_BLOCK"
+          buy-price: 15.0
+          sell-price: 7.5
+        - item: "DIRT"
+          buy-price: 5.0
+          sell-price: 2.5
+    tools:
+      display-name: "§6Werkzeuge"
+      icon: "DIAMOND_PICKAXE"
+      items:
+        - item: "IRON_PICKAXE"
+          buy-price: 200.0
+          sell-price: 100.0
+        - item: "IRON_SHOVEL"
+          buy-price: 150.0
+          sell-price: 75.0
+        - item: "IRON_AXE"
+          buy-price: 180.0
+          sell-price: 90.0
+
+# Verlosungssystem
+lottery:
+  # Verlosungssystem aktivieren
+  enabled: true
+  # Preis pro Los
+  ticket-price: 100.0
+  # Basisgewinn
+  base-prize: 500.0
+  # Prozentsatz des Ticketpools, der in den Preis fließt
+  pool-percentage: 80
+  # Ziehungsintervall in Minuten
+  draw-interval: 60
+  # Ankündigungszeiten vor der Ziehung (in Minuten)
+  announcements: [30, 15, 5, 1]
+
+# Belohnungssystem
+rewards:
+  # Belohnungssystem aktivieren
+  enabled: true
+  # Tägliche Belohnung
+  daily:
+    amount: 100.0
+    enabled: true
+  # Wöchentliche Belohnung
+  weekly:
+    amount: 500.0
+    enabled: true
+  # Monatliche Belohnung
+  monthly:
+    amount: 2000.0
+    enabled: true
+  # Streak-Bonus aktivieren
+  streak-enabled: true
+  # Bonus pro Tag Streak
+  streak-bonus-per-day: 10.0
+  # Maximaler Streak-Bonus
+  max-streak-bonus: 500.0
