@@ -937,45 +937,6 @@ public class PlayerAPI {
     }
     
     /**
-     * Get the ban history for a player
-     * @param player The player to check
-     * @return A list of ban entries
-     */
-    public List<Map<String, Object>> getBanHistory(OfflinePlayer player) {
-        List<Map<String, Object>> history = new ArrayList<>();
-        FileConfiguration data = plugin.getConfigManager().getConfig("data.yml");
-        String path = "players." + player.getUniqueId() + ".ban_history";
-        
-        if (!data.contains(path)) {
-            return history;
-        }
-        
-        ConfigurationSection historySection = data.getConfigurationSection(path);
-        if (historySection == null) {
-            return history;
-        }
-        
-        for (String key : historySection.getKeys(false)) {
-            ConfigurationSection entrySection = historySection.getConfigurationSection(key);
-            if (entrySection != null) {
-                Map<String, Object> entry = new HashMap<>();
-                entry.put("reason", entrySection.getString("reason", "No reason specified"));
-                entry.put("admin", entrySection.getString("admin", "Unknown"));
-                entry.put("time", entrySection.getLong("time", 0));
-                entry.put("until", entrySection.getLong("until", -1));
-                entry.put("active", entrySection.getBoolean("active", false));
-                entry.put("expired", entrySection.getBoolean("expired", false));
-                entry.put("unbanned_by", entrySection.getString("unbanned_by", null));
-                entry.put("unbanned_time", entrySection.getLong("unbanned_time", 0));
-                
-                history.add(entry);
-            }
-        }
-        
-        return history;
-    }
-    
-    /**
      * Process placeholders in a string
      * @param player The player to get data for
      * @param input The input string with placeholders
