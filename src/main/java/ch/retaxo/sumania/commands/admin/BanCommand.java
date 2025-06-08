@@ -191,9 +191,9 @@ public class BanCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage("§cPlayer not found: " + targetName);
             return true;
         }
-        
-        // Send player info header
-        sender.sendMessage("§6=== Player Information for §e" + target.getName() + " §6===");
+
+
+        sender.sendMessage("§8-----------------------------------");
         
         // Only use fancy components if sender is a player
         if (sender instanceof Player) {
@@ -279,6 +279,7 @@ public class BanCommand implements CommandExecutor, TabCompleter {
                 "/banhistory " + target.getName()));
             player.spigot().sendMessage(banComponent);
         }
+
         
         // Stats section with hover details
         int kills = plugin.getAPI().getPlayerAPI().getKills(target);
@@ -375,6 +376,7 @@ public class BanCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage("§7Kills: §f" + kills);
         sender.sendMessage("§7Deaths: §f" + deaths);
         sender.sendMessage("§7K/D Ratio: §f" + String.format("%.2f", kdr));
+        sender.sendMessage("§8-----------------------------------");
         
         // Player economy
         double balance = plugin.getAPI().getEconomyAPI().getBalance(target);
@@ -397,6 +399,7 @@ public class BanCommand implements CommandExecutor, TabCompleter {
             }
         }
     }
+
     
     /**
      * Handle the /banhistory command
