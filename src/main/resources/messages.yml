@@ -1,0 +1,74 @@
+# Sumania Messages Configuration File
+
+# General messages
+general:
+  no-permission: "&cYou don't have permission to do that."
+  player-only: "&cThis command can only be used by players."
+  invalid-args: "&cInvalid arguments. Usage: %usage%"
+  player-not-found: "&cPlayer %player% not found."
+  reload-success: "&aAll configuration files have been reloaded."
+  
+# Economy messages
+economy:
+  balance: "&aYour balance: %balance% %currency%"
+  balance-other: "&a%player%'s balance: %balance% %currency%"
+  pay-success: "&aYou have sent %amount% %currency% to %player%."
+  pay-received: "&aYou have received %amount% %currency% from %player%."
+  not-enough-money: "&cYou don't have enough money."
+  
+# Teleportation messages
+teleport:
+  teleporting: "&aTeleporting in %seconds% seconds. Don't move!"
+  teleport-cancelled: "&cTeleportation cancelled due to movement."
+  teleport-success: "&aYou have been teleported."
+  teleport-request-sent: "&aTeleport request sent to %player%."
+  teleport-request-received: "&a%player% wants to teleport to you. Use /tpaccept or /tpdeny."
+  teleport-request-accepted: "&a%player% accepted your teleport request."
+  teleport-request-denied: "&c%player% denied your teleport request."
+  teleport-no-requests: "&cYou don't have any pending teleport requests."
+  teleport-cooldown: "&cYou must wait %seconds% seconds before teleporting again."
+  
+# Home messages
+home:
+  home-set: "&aHome '%home%' has been set."
+  home-deleted: "&aHome '%home%' has been deleted."
+  home-teleport: "&aTeleporting to home '%home%'."
+  home-not-found: "&cHome '%home%' not found."
+  home-list: "&aYour homes: %homes%"
+  home-limit-reached: "&cYou have reached your home limit (%limit%)."
+  
+# Warp messages
+warp:
+  warp-created: "&aWarp '%warp%' has been created."
+  warp-deleted: "&aWarp '%warp%' has been deleted."
+  warp-teleport: "&aTeleporting to warp '%warp%'."
+  warp-not-found: "&cWarp '%warp%' not found."
+  warp-list: "&aAvailable warps: %warps%"
+  
+# Claim messages
+claim:
+  claim-created: "&aYou have claimed this area."
+  claim-deleted: "&aYou have unclaimed this area."
+  claim-info: "&aThis claim belongs to %player%."
+  claim-enter: "&aEntering %player%'s claim."
+  claim-leave: "&aLeaving %player%'s claim."
+  claim-limit-reached: "&cYou have reached your claim limit (%limit%)."
+  cannot-build: "&cYou cannot build here. This area is claimed by %player%."
+  
+# Chat messages
+chat:
+  chat-muted: "&cThe chat is currently muted."
+  chat-unmuted: "&aThe chat has been unmuted."
+  chat-cleared: "&aThe chat has been cleared."
+  chat-cooldown: "&cYou must wait %seconds% seconds before chatting again."
+  
+# Admin messages
+admin:
+  gamemode-changed: "&aYour gamemode has been changed to %gamemode%."
+  gamemode-changed-other: "&a%player%'s gamemode has been changed to %gamemode%."
+  vanish-enabled: "&aYou are now invisible to other players."
+  vanish-disabled: "&aYou are now visible to other players."
+  god-enabled: "&aGod mode enabled."
+  god-disabled: "&aGod mode disabled."
+  fly-enabled: "&aFlight enabled."
+  fly-disabled: "&aFlight disabled."

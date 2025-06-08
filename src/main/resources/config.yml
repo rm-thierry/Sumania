@@ -1,0 +1,91 @@
+# Sumania Configuration File
+
+# Prefix for all messages
+prefix: "§8[§6Sumania§8] §7"
+
+# Enable debug mode
+debug-mode: false
+
+# Database configuration
+database:
+  # Database type: sqlite or mysql
+  type: sqlite
+  # MySQL configuration (only used if type is mysql)
+  mysql:
+    host: localhost
+    port: 3306
+    database: sumania
+    username: root
+    password: password
+    use-ssl: false
+
+# Server settings
+server:
+  # Server name
+  name: "Sumania SMP"
+  # Max players
+  max-players: 100
+  # MOTD (Message of the day)
+  motd: "Welcome to Sumania SMP!"
+  
+# Game mechanics
+mechanics:
+  # Enable custom crafting recipes
+  custom-recipes: true
+  # Enable custom mob spawning
+  custom-mobs: true
+  # Enable custom enchantments
+  custom-enchantments: true
+  # Enable custom items
+  custom-items: true
+  
+# Economy settings
+economy:
+  # Enable economy
+  enabled: true
+  # Starting balance
+  starting-balance: 1000.0
+  # Currency name
+  currency-name: "Coins"
+  # Currency symbol
+  currency-symbol: "$"
+
+# Teleportation settings
+teleportation:
+  # Enable teleportation
+  enabled: true
+  # Teleport delay (in seconds)
+  delay: 5
+  # Teleport cooldown (in seconds)
+  cooldown: 60
+  
+# Protection settings
+protection:
+  # Enable claim system
+  claims-enabled: true
+  # Maximum claims per player
+  max-claims-per-player: 3
+  # Default claim size (blocks)
+  default-claim-size: 100
+
+# Chat settings
+chat:
+  # Enable chat formatting
+  format-enabled: true
+  # Chat format
+  format: "§8[§6%rank%§8] §7%player% §8» §f%message%"
+  # Chat range (blocks, 0 for global)
+  range: 0
+  
+# Command settings
+commands:
+  # Enable economy commands
+  economy: true
+  # Enable teleportation commands
+  teleport: true
+  # Enable home commands
+  home: true
+  # Enable warp commands
+  warp: true
+  # Enable spawn commands
+  spawn: true

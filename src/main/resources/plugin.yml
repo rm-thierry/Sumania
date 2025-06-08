@@ -2,3 +2,169 @@ name: Sumania
 version: '1.0-SNAPSHOT'
 main: ch.retaxo.sumania.Sumania
 api-version: '1.21'
+description: 'A comprehensive SMP server plugin with economy, teleportation, claims, and more.'
+authors: [retaxo]
+
+commands:
+  sumania:
+    description: Main plugin command
+    usage: /sumania [reload]
+    permission: sumania.admin
+  
+  # Economy commands
+  balance:
+    description: Check your balance
+    usage: /balance [player]
+    aliases: [bal, money]
+    permission: sumania.economy.balance
+  pay:
+    description: Pay another player
+    usage: /pay <player> <amount>
+    permission: sumania.economy.pay
+  
+  # Teleport commands
+  tp:
+    description: Teleport to a player
+    usage: /tp <player> [target]
+    permission: sumania.teleport.tp
+  tpa:
+    description: Request to teleport to a player
+    usage: /tpa <player>
+    permission: sumania.teleport.tpa
+  tpaccept:
+    description: Accept a teleport request
+    usage: /tpaccept
+    permission: sumania.teleport.tpaccept
+  tpdeny:
+    description: Deny a teleport request
+    usage: /tpdeny
+    permission: sumania.teleport.tpdeny
+  
+  # Home commands
+  home:
+    description: Teleport to your home
+    usage: /home [name]
+    permission: sumania.home.home
+  sethome:
+    description: Set your home
+    usage: /sethome [name]
+    permission: sumania.home.set
+  delhome:
+    description: Delete your home
+    usage: /delhome [name]
+    permission: sumania.home.delete
+  homes:
+    description: List your homes
+    usage: /homes
+    permission: sumania.home.list
+  
+  # Warp commands
+  warp:
+    description: Teleport to a warp
+    usage: /warp <name>
+    permission: sumania.warp.use
+  setwarp:
+    description: Set a warp
+    usage: /setwarp <name>
+    permission: sumania.warp.set
+  delwarp:
+    description: Delete a warp
+    usage: /delwarp <name>
+    permission: sumania.warp.delete
+  warps:
+    description: List all warps
+    usage: /warps
+    permission: sumania.warp.list
+  
+  # Chat commands
+  chat:
+    description: Chat management commands
+    usage: /chat [mute|unmute|clear]
+    permission: sumania.chat
+
+permissions:
+  sumania.admin:
+    description: Allows access to admin commands
+    default: op
+  sumania.admin.reload:
+    description: Allows reloading the plugin
+    default: op
+  
+  # Economy permissions
+  sumania.economy.balance:
+    description: Allows checking your own balance
+    default: true
+  sumania.economy.balance.others:
+    description: Allows checking other players' balances
+    default: op
+  sumania.economy.pay:
+    description: Allows paying other players
+    default: true
+  
+  # Teleport permissions
+  sumania.teleport.tp:
+    description: Allows teleporting to other players
+    default: op
+  sumania.teleport.tp.others:
+    description: Allows teleporting other players
+    default: op
+  sumania.teleport.tpa:
+    description: Allows requesting to teleport to other players
+    default: true
+  sumania.teleport.tpaccept:
+    description: Allows accepting teleport requests
+    default: true
+  sumania.teleport.tpdeny:
+    description: Allows denying teleport requests
+    default: true
+  
+  # Home permissions
+  sumania.home.home:
+    description: Allows teleporting to homes
+    default: true
+  sumania.home.set:
+    description: Allows setting homes
+    default: true
+  sumania.home.delete:
+    description: Allows deleting homes
+    default: true
+  sumania.home.list:
+    description: Allows listing homes
+    default: true
+  sumania.home.bypass.limit:
+    description: Allows bypassing the home limit
+    default: op
+  
+  # Warp permissions
+  sumania.warp.use:
+    description: Allows using warps
+    default: true
+  sumania.warp.use.*:
+    description: Allows using all warps
+    default: true
+  sumania.warp.set:
+    description: Allows setting warps
+    default: op
+  sumania.warp.delete:
+    description: Allows deleting warps
+    default: op
+  sumania.warp.list:
+    description: Allows listing warps
+    default: true
+  
+  # Chat permissions
+  sumania.chat:
+    description: Allows access to chat commands
+    default: true
+  sumania.chat.mute:
+    description: Allows muting and unmuting the chat
+    default: op
+  sumania.chat.clear:
+    description: Allows clearing the chat
+    default: op
+  sumania.chat.bypass.mute:
+    description: Allows talking in muted chat
+    default: op
+  sumania.chat.bypass.cooldown:
+    description: Allows bypassing chat cooldown
+    default: op
