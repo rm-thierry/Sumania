@@ -150,6 +150,16 @@ commands:
     description: Spielerinformationen anzeigen
     usage: /lookup <Spieler>
     permission: sumania.lookup
+  banhistory:
+    description: Bannverlauf eines Spielers anzeigen
+    usage: /banhistory <Spieler>
+    aliases: [bans, banlog]
+    permission: sumania.lookup
+  mutehistory:
+    description: Muteverlauf eines Spielers anzeigen
+    usage: /mutehistory <Spieler>
+    aliases: [mutes, mutelog]
+    permission: sumania.lookup
 
 permissions:
   sumania.admin:

@@ -11,6 +11,9 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
 import java.text.SimpleDateFormat;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -364,6 +367,387 @@ public class PlayerAPI {
      * @return True if the player was banned successfully
      */
     public boolean banPlayer(OfflinePlayer target, String reason, String admin, long duration) {
+        // Ensure player exists in database
+        ensurePlayerInDatabase(target);
+        
+        // Set ban information
+        long now = System.currentTimeMillis();
+        long expiration = duration > 0 ? now + duration : -1;
+        
+        // Insert ban into database
+        try {
+            String tablePrefix = plugin.getConfigManager().getTablePrefix();
+            String query = "INSERT INTO " + tablePrefix + "bans " +
+                           "(uuid, reason, admin, ban_time, expiration, active) " +
+                           "VALUES (?, ?, ?, ?, ?, 1)";
+            
+            try (PreparedStatement stmt = plugin.getConfigManager().getDbConnection().prepareStatement(query)) {
+                stmt.setString(1, target.getUniqueId().toString());
+                stmt.setString(2, reason);
+                stmt.setString(3, admin);
+                stmt.setTimestamp(4, new java.sql.Timestamp(now));
+                stmt.setTimestamp(5, expiration > 0 ? new java.sql.Timestamp(expiration) : null);
+                
+                stmt.executeUpdate();
+            }
+            
+            // Also update legacy data.yml for backwards compatibility
+            updateLegacyBanData(target, reason, admin, now, expiration);
+            
+            // Kick the player if online
+            if (target.isOnline()) {
+                Player player = target.getPlayer();
+                if (player != null) {
+                    String banMessage = formatBanMessage(reason, admin, expiration);
+                    player.kickPlayer(banMessage);
+                }
+            }
+            
+            // Broadcast ban message
+            String banMessage = "§c" + target.getName() + " §7wurde von §c" + admin + " §7gebannt.";
+            String durationStr = formatDuration(duration);
+            if (duration > 0) {
+                banMessage += " §7Dauer: §c" + durationStr;
+            } else {
+                banMessage += " §7Dauer: §cPermanent";
+            }
+            banMessage += " §7Grund: §c" + reason;
+            plugin.getAPI().getChatAPI().broadcast(banMessage);
+            
+            return true;
+        } catch (SQLException e) {
+            plugin.getLogger().severe("Failed to save ban to database: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+    
+    /**
+     * Unban a player
+     * @param target The player to unban
+     * @param admin The admin who issued the unban
+     * @return True if the player was unbanned successfully
+     */
+    public boolean unbanPlayer(OfflinePlayer target, String admin) {
+        // Check if player is banned
+        if (!isBanned(target)) {
+            return false;
+        }
+        
+        // Update ban in database
+        try {
+            String tablePrefix = plugin.getConfigManager().getTablePrefix();
+            String query = "UPDATE " + tablePrefix + "bans " +
+                           "SET active = 0, unbanned_by = ?, unbanned_time = ? " +
+                           "WHERE uuid = ? AND active = 1";
+            
+            try (PreparedStatement stmt = plugin.getConfigManager().getDbConnection().prepareStatement(query)) {
+                stmt.setString(1, admin);
+                stmt.setTimestamp(2, new java.sql.Timestamp(System.currentTimeMillis()));
+                stmt.setString(3, target.getUniqueId().toString());
+                
+                int affected = stmt.executeUpdate();
+                
+                if (affected > 0) {
+                    // Also update legacy data.yml for backwards compatibility
+                    updateLegacyUnbanData(target, admin);
+                    
+                    // Broadcast unban message
+                    String unbanMessage = "§a" + target.getName() + " §7wurde von §a" + admin + " §7entbannt.";
+                    plugin.getAPI().getChatAPI().broadcast(unbanMessage);
+                    
+                    return true;
+                }
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().severe("Failed to update ban in database: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Check if a player is banned
+     * @param player The player to check
+     * @return True if the player is banned
+     */
+    public boolean isBanned(OfflinePlayer player) {
+        try {
+            String tablePrefix = plugin.getConfigManager().getTablePrefix();
+            String query = "SELECT id, expiration FROM " + tablePrefix + "bans " +
+                           "WHERE uuid = ? AND active = 1 " +
+                           "ORDER BY ban_time DESC LIMIT 1";
+            
+            try (PreparedStatement stmt = plugin.getConfigManager().getDbConnection().prepareStatement(query)) {
+                stmt.setString(1, player.getUniqueId().toString());
+                
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        // Check if ban has expired
+                        java.sql.Timestamp expiration = rs.getTimestamp("expiration");
+                        
+                        if (expiration == null) {
+                            return true; // Permanent ban
+                        }
+                        
+                        if (System.currentTimeMillis() > expiration.getTime()) {
+                            // Ban has expired, set to inactive
+                            expireActiveBan(player);
+                            return false;
+                        }
+                        
+                        return true; // Player is still banned
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().severe("Failed to check ban status: " + e.getMessage());
+            e.printStackTrace();
+            
+            // Fall back to legacy method if database fails
+            return isLegacyBanned(player);
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Get the ban reason for a player
+     * @param player The player to check
+     * @return The ban reason, or null if the player is not banned
+     */
+    public String getBanReason(OfflinePlayer player) {
+        if (!isBanned(player)) {
+            return null;
+        }
+        
+        try {
+            String tablePrefix = plugin.getConfigManager().getTablePrefix();
+            String query = "SELECT reason FROM " + tablePrefix + "bans " +
+                           "WHERE uuid = ? AND active = 1 " +
+                           "ORDER BY ban_time DESC LIMIT 1";
+            
+            try (PreparedStatement stmt = plugin.getConfigManager().getDbConnection().prepareStatement(query)) {
+                stmt.setString(1, player.getUniqueId().toString());
+                
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        return rs.getString("reason");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().severe("Failed to get ban reason: " + e.getMessage());
+            e.printStackTrace();
+            
+            // Fall back to legacy method if database fails
+            return getLegacyBanReason(player);
+        }
+        
+        return "No reason specified";
+    }
+    
+    /**
+     * Get the ban expiration time for a player
+     * @param player The player to check
+     * @return The ban expiration time in milliseconds, or -1 if permanent
+     */
+    public long getBanExpiration(OfflinePlayer player) {
+        if (!isBanned(player)) {
+            return 0;
+        }
+        
+        try {
+            String tablePrefix = plugin.getConfigManager().getTablePrefix();
+            String query = "SELECT expiration FROM " + tablePrefix + "bans " +
+                           "WHERE uuid = ? AND active = 1 " +
+                           "ORDER BY ban_time DESC LIMIT 1";
+            
+            try (PreparedStatement stmt = plugin.getConfigManager().getDbConnection().prepareStatement(query)) {
+                stmt.setString(1, player.getUniqueId().toString());
+                
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        java.sql.Timestamp expiration = rs.getTimestamp("expiration");
+                        return expiration != null ? expiration.getTime() : -1;
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().severe("Failed to get ban expiration: " + e.getMessage());
+            e.printStackTrace();
+            
+            // Fall back to legacy method if database fails
+            return getLegacyBanExpiration(player);
+        }
+        
+        return -1;
+    }
+    
+    /**
+     * Get the ban history for a player
+     * @param player The player to check
+     * @return A list of ban entries
+     */
+    public List<Map<String, Object>> getBanHistory(OfflinePlayer player) {
+        List<Map<String, Object>> history = new ArrayList<>();
+        
+        try {
+            String tablePrefix = plugin.getConfigManager().getTablePrefix();
+            String query = "SELECT id, reason, admin, ban_time, expiration, active, " +
+                           "unbanned_by, unbanned_time " +
+                           "FROM " + tablePrefix + "bans " +
+                           "WHERE uuid = ? " +
+                           "ORDER BY ban_time DESC";
+            
+            try (PreparedStatement stmt = plugin.getConfigManager().getDbConnection().prepareStatement(query)) {
+                stmt.setString(1, player.getUniqueId().toString());
+                
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        Map<String, Object> entry = new HashMap<>();
+                        entry.put("id", rs.getInt("id"));
+                        entry.put("reason", rs.getString("reason"));
+                        entry.put("admin", rs.getString("admin"));
+                        
+                        java.sql.Timestamp banTime = rs.getTimestamp("ban_time");
+                        entry.put("time", banTime != null ? banTime.getTime() : 0);
+                        
+                        java.sql.Timestamp expiration = rs.getTimestamp("expiration");
+                        entry.put("until", expiration != null ? expiration.getTime() : -1);
+                        
+                        entry.put("active", rs.getBoolean("active"));
+                        entry.put("expired", !rs.getBoolean("active") && expiration != null && 
+                                           System.currentTimeMillis() > expiration.getTime());
+                        
+                        entry.put("unbanned_by", rs.getString("unbanned_by"));
+                        
+                        java.sql.Timestamp unbannedTime = rs.getTimestamp("unbanned_time");
+                        entry.put("unbanned_time", unbannedTime != null ? unbannedTime.getTime() : 0);
+                        
+                        history.add(entry);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().severe("Failed to get ban history: " + e.getMessage());
+            e.printStackTrace();
+            
+            // Fall back to legacy method
+            return getLegacyBanHistory(player);
+        }
+        
+        return history;
+    }
+    
+    /**
+     * Get the mute history for a player
+     * @param player The player to check
+     * @return A list of mute entries
+     */
+    public List<Map<String, Object>> getMuteHistory(OfflinePlayer player) {
+        List<Map<String, Object>> history = new ArrayList<>();
+        
+        try {
+            String tablePrefix = plugin.getConfigManager().getTablePrefix();
+            String query = "SELECT id, reason, admin, mute_time, expiration, active, " +
+                           "unmuted_by, unmuted_time " +
+                           "FROM " + tablePrefix + "mutes " +
+                           "WHERE uuid = ? " +
+                           "ORDER BY mute_time DESC";
+            
+            try (PreparedStatement stmt = plugin.getConfigManager().getDbConnection().prepareStatement(query)) {
+                stmt.setString(1, player.getUniqueId().toString());
+                
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        Map<String, Object> entry = new HashMap<>();
+                        entry.put("id", rs.getInt("id"));
+                        entry.put("reason", rs.getString("reason"));
+                        entry.put("admin", rs.getString("admin"));
+                        
+                        java.sql.Timestamp muteTime = rs.getTimestamp("mute_time");
+                        entry.put("time", muteTime != null ? muteTime.getTime() : 0);
+                        
+                        java.sql.Timestamp expiration = rs.getTimestamp("expiration");
+                        entry.put("until", expiration != null ? expiration.getTime() : -1);
+                        
+                        entry.put("active", rs.getBoolean("active"));
+                        entry.put("expired", !rs.getBoolean("active") && expiration != null && 
+                                           System.currentTimeMillis() > expiration.getTime());
+                        
+                        entry.put("unmuted_by", rs.getString("unmuted_by"));
+                        
+                        java.sql.Timestamp unmutedTime = rs.getTimestamp("unmuted_time");
+                        entry.put("unmuted_time", unmutedTime != null ? unmutedTime.getTime() : 0);
+                        
+                        history.add(entry);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().severe("Failed to get mute history: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return history;
+    }
+    
+    /**
+     * Mark an active ban as expired
+     * @param player The player to update
+     */
+    private void expireActiveBan(OfflinePlayer player) {
+        try {
+            String tablePrefix = plugin.getConfigManager().getTablePrefix();
+            String query = "UPDATE " + tablePrefix + "bans " +
+                           "SET active = 0 " +
+                           "WHERE uuid = ? AND active = 1 AND expiration IS NOT NULL AND expiration < ?";
+            
+            try (PreparedStatement stmt = plugin.getConfigManager().getDbConnection().prepareStatement(query)) {
+                stmt.setString(1, player.getUniqueId().toString());
+                stmt.setTimestamp(2, new java.sql.Timestamp(System.currentTimeMillis()));
+                
+                stmt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().severe("Failed to expire ban: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Ensure player exists in database
+     * @param player The player to check
+     */
+    private void ensurePlayerInDatabase(OfflinePlayer player) {
+        try {
+            String tablePrefix = plugin.getConfigManager().getTablePrefix();
+            String query = "INSERT OR IGNORE INTO " + tablePrefix + "players (uuid, name) VALUES (?, ?)";
+            
+            if (plugin.getConfigManager().getDbType().equalsIgnoreCase("mysql")) {
+                query = "INSERT IGNORE INTO " + tablePrefix + "players (uuid, name) VALUES (?, ?)";
+            }
+            
+            try (PreparedStatement stmt = plugin.getConfigManager().getDbConnection().prepareStatement(query)) {
+                stmt.setString(1, player.getUniqueId().toString());
+                stmt.setString(2, player.getName());
+                
+                stmt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().severe("Failed to ensure player in database: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    // Legacy compatibility methods
+    
+    /**
+     * Update legacy data.yml for backwards compatibility when banning
+     */
+    private void updateLegacyBanData(OfflinePlayer target, String reason, String admin, long time, long expiration) {
         FileConfiguration data = plugin.getConfigManager().getConfig("data.yml");
         String path = "players." + target.getUniqueId();
         String banPath = path + ".ban";
@@ -374,79 +758,38 @@ public class PlayerAPI {
         }
         
         // Set ban information
-        long now = System.currentTimeMillis();
         data.set(banPath + ".active", true);
         data.set(banPath + ".reason", reason);
         data.set(banPath + ".admin", admin);
-        data.set(banPath + ".time", now);
-        
-        if (duration > 0) {
-            data.set(banPath + ".until", now + duration);
-        } else {
-            data.set(banPath + ".until", -1); // Permanent
-        }
+        data.set(banPath + ".time", time);
+        data.set(banPath + ".until", expiration);
         
         // Save the data file
         plugin.getConfigManager().saveConfig("data.yml");
-        
-        // Kick the player if online
-        if (target.isOnline()) {
-            Player player = target.getPlayer();
-            if (player != null) {
-                String banMessage = formatBanMessage(reason, admin, now + duration);
-                player.kickPlayer(banMessage);
-            }
-        }
-        
-        // Broadcast ban message
-        String banMessage = "§c" + target.getName() + " §7wurde von §c" + admin + " §7gebannt.";
-        String durationStr = formatDuration(duration);
-        if (duration > 0) {
-            banMessage += " §7Dauer: §c" + durationStr;
-        } else {
-            banMessage += " §7Dauer: §cPermanent";
-        }
-        banMessage += " §7Grund: §c" + reason;
-        plugin.getAPI().getChatAPI().broadcast(banMessage);
-        
-        return true;
     }
     
     /**
-     * Unban a player
-     * @param target The player to unban
-     * @param admin The admin who issued the unban
-     * @return True if the player was unbanned successfully
+     * Update legacy data.yml for backwards compatibility when unbanning
      */
-    public boolean unbanPlayer(OfflinePlayer target, String admin) {
+    private void updateLegacyUnbanData(OfflinePlayer target, String admin) {
         FileConfiguration data = plugin.getConfigManager().getConfig("data.yml");
         String path = "players." + target.getUniqueId() + ".ban";
         
-        if (!data.contains(path + ".active") || !data.getBoolean(path + ".active")) {
-            return false; // Player is not banned
+        if (data.contains(path + ".active")) {
+            // Set ban to inactive
+            data.set(path + ".active", false);
+            data.set(path + ".unbanned_by", admin);
+            data.set(path + ".unbanned_time", System.currentTimeMillis());
+            
+            // Save the data file
+            plugin.getConfigManager().saveConfig("data.yml");
         }
-        
-        // Set ban to inactive
-        data.set(path + ".active", false);
-        data.set(path + ".unbanned_by", admin);
-        data.set(path + ".unbanned_time", System.currentTimeMillis());
-        
-        // Save the data file
-        plugin.getConfigManager().saveConfig("data.yml");
-        
-        // Broadcast unban message
-        String unbanMessage = "§a" + target.getName() + " §7wurde von §a" + admin + " §7entbannt.";
-        plugin.getAPI().getChatAPI().broadcast(unbanMessage);
-        
-        return true;
     }
     
     /**
-     * Check if a player is banned
-     * @param player The player to check
-     * @return True if the player is banned
+     * Legacy method to check if a player is banned
      */
-    public boolean isBanned(OfflinePlayer player) {
+    private boolean isLegacyBanned(OfflinePlayer player) {
         FileConfiguration data = plugin.getConfigManager().getConfig("data.yml");
         String path = "players." + player.getUniqueId() + ".ban";
         
@@ -472,15 +815,9 @@ public class PlayerAPI {
     }
     
     /**
-     * Get the ban reason for a player
-     * @param player The player to check
-     * @return The ban reason, or null if the player is not banned
+     * Legacy method to get a player's ban reason
      */
-    public String getBanReason(OfflinePlayer player) {
-        if (!isBanned(player)) {
-            return null;
-        }
-        
+    private String getLegacyBanReason(OfflinePlayer player) {
         FileConfiguration data = plugin.getConfigManager().getConfig("data.yml");
         String path = "players." + player.getUniqueId() + ".ban";
         
@@ -488,19 +825,50 @@ public class PlayerAPI {
     }
     
     /**
-     * Get the ban expiration time for a player
-     * @param player The player to check
-     * @return The ban expiration time in milliseconds, or -1 if permanent
+     * Legacy method to get a player's ban expiration
      */
-    public long getBanExpiration(OfflinePlayer player) {
-        if (!isBanned(player)) {
-            return 0;
-        }
-        
+    private long getLegacyBanExpiration(OfflinePlayer player) {
         FileConfiguration data = plugin.getConfigManager().getConfig("data.yml");
         String path = "players." + player.getUniqueId() + ".ban";
         
         return data.getLong(path + ".until", -1);
+    }
+    
+    /**
+     * Legacy method to get a player's ban history
+     */
+    private List<Map<String, Object>> getLegacyBanHistory(OfflinePlayer player) {
+        List<Map<String, Object>> history = new ArrayList<>();
+        FileConfiguration data = plugin.getConfigManager().getConfig("data.yml");
+        String path = "players." + player.getUniqueId() + ".ban_history";
+        
+        if (!data.contains(path)) {
+            return history;
+        }
+        
+        ConfigurationSection historySection = data.getConfigurationSection(path);
+        if (historySection == null) {
+            return history;
+        }
+        
+        for (String key : historySection.getKeys(false)) {
+            ConfigurationSection entrySection = historySection.getConfigurationSection(key);
+            if (entrySection != null) {
+                Map<String, Object> entry = new HashMap<>();
+                entry.put("reason", entrySection.getString("reason", "No reason specified"));
+                entry.put("admin", entrySection.getString("admin", "Unknown"));
+                entry.put("time", entrySection.getLong("time", 0));
+                entry.put("until", entrySection.getLong("until", -1));
+                entry.put("active", entrySection.getBoolean("active", false));
+                entry.put("expired", entrySection.getBoolean("expired", false));
+                entry.put("unbanned_by", entrySection.getString("unbanned_by", null));
+                entry.put("unbanned_time", entrySection.getLong("unbanned_time", 0));
+                
+                history.add(entry);
+            }
+        }
+        
+        return history;
     }
     
     /**

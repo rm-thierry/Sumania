@@ -225,6 +225,34 @@ public class ConfigManager {
                 "streak_days INTEGER DEFAULT 0, " +
                 "last_streak_update TIMESTAMP NULL" +
                 ")";
+                
+        // Bans table
+        String bansTable = "CREATE TABLE IF NOT EXISTS " + tablePrefix + "bans (" +
+                "id INTEGER PRIMARY KEY " + (dbType.equalsIgnoreCase("mysql") ? "AUTO_INCREMENT" : "AUTOINCREMENT") + ", " +
+                "uuid VARCHAR(36) NOT NULL, " +
+                "reason TEXT NOT NULL, " +
+                "admin VARCHAR(36) NOT NULL, " +
+                "ban_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
+                "expiration TIMESTAMP NULL, " + 
+                "active BOOLEAN DEFAULT 1, " +
+                "unbanned_by VARCHAR(36) NULL, " +
+                "unbanned_time TIMESTAMP NULL, " +
+                "INDEX idx_uuid (uuid)" +
+                ")";
+        
+        // Mutes table
+        String mutesTable = "CREATE TABLE IF NOT EXISTS " + tablePrefix + "mutes (" +
+                "id INTEGER PRIMARY KEY " + (dbType.equalsIgnoreCase("mysql") ? "AUTO_INCREMENT" : "AUTOINCREMENT") + ", " +
+                "uuid VARCHAR(36) NOT NULL, " +
+                "reason TEXT NOT NULL, " +
+                "admin VARCHAR(36) NOT NULL, " +
+                "mute_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
+                "expiration TIMESTAMP NULL, " + 
+                "active BOOLEAN DEFAULT 1, " +
+                "unmuted_by VARCHAR(36) NULL, " +
+                "unmuted_time TIMESTAMP NULL, " +
+                "INDEX idx_uuid (uuid)" +
+                ")";
         
         // Execute all queries
         try (PreparedStatement playersStmt = dbConnection.prepareStatement(playersTable);
@@ -233,7 +261,9 @@ public class ConfigManager {
              PreparedStatement claimsStmt = dbConnection.prepareStatement(claimsTable);
              PreparedStatement discordStmt = dbConnection.prepareStatement(discordTable);
              PreparedStatement lotteryStmt = dbConnection.prepareStatement(lotteryTable);
-             PreparedStatement rewardsStmt = dbConnection.prepareStatement(rewardsTable)) {
+             PreparedStatement rewardsStmt = dbConnection.prepareStatement(rewardsTable);
+             PreparedStatement bansStmt = dbConnection.prepareStatement(bansTable);
+             PreparedStatement mutesStmt = dbConnection.prepareStatement(mutesTable)) {
             
             playersStmt.executeUpdate();
             homesStmt.executeUpdate();
@@ -242,6 +272,8 @@ public class ConfigManager {
             discordStmt.executeUpdate();
             lotteryStmt.executeUpdate();
             rewardsStmt.executeUpdate();
+            bansStmt.executeUpdate();
+            mutesStmt.executeUpdate();
             
             plugin.getLogger().info("Database tables created or verified!");
         }

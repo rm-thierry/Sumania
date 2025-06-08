@@ -101,6 +101,16 @@ public class CommandManager {
             registerCommand("tempban", banCommand);
             registerCommand("unban", banCommand);
             registerCommand("lookup", banCommand);
+            registerCommand("banhistory", banCommand);
+            registerCommand("mutehistory", banCommand);
+            
+            // Set tab completers for commands
+            if (plugin.getCommand("ban") != null) plugin.getCommand("ban").setTabCompleter(banCommand);
+            if (plugin.getCommand("tempban") != null) plugin.getCommand("tempban").setTabCompleter(banCommand);
+            if (plugin.getCommand("unban") != null) plugin.getCommand("unban").setTabCompleter(banCommand);
+            if (plugin.getCommand("lookup") != null) plugin.getCommand("lookup").setTabCompleter(banCommand);
+            if (plugin.getCommand("banhistory") != null) plugin.getCommand("banhistory").setTabCompleter(banCommand);
+            if (plugin.getCommand("mutehistory") != null) plugin.getCommand("mutehistory").setTabCompleter(banCommand);
         }
     }
     
