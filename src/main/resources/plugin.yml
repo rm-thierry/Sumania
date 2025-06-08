@@ -1,0 +1,4 @@
+name: Sumania
+version: '1.0-SNAPSHOT'
+main: ch.retaxo.sumania.Sumania
+api-version: '1.21'
