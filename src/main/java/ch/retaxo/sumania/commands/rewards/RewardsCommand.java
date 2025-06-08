@@ -18,12 +18,15 @@ import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.bukkit.Bukkit;
+
 /**
  * Command to manage rewards
  */
 public class RewardsCommand implements CommandExecutor {
 
     private final Sumania plugin;
+    private RewardsMenuHandler menuHandler;
     
     /**
      * Constructor
@@ -31,6 +34,11 @@ public class RewardsCommand implements CommandExecutor {
      */
     public RewardsCommand(Sumania plugin) {
         this.plugin = plugin;
+        
+        // Create menu handler
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            this.menuHandler = new RewardsMenuHandler(plugin, this);
+        }, 1L);
     }
     
     @Override
@@ -71,8 +79,14 @@ public class RewardsCommand implements CommandExecutor {
         }
         
         if (args.length == 0) {
-            // Show rewards info
-            return showRewardsInfo(player);
+            // Open rewards menu
+            if (menuHandler != null) {
+                menuHandler.openRewardsMenu(player);
+                return true;
+            } else {
+                // Fallback to text info if menu handler is not available
+                return showRewardsInfo(player);
+            }
         } else if (args.length == 1) {
             if (args[0].equalsIgnoreCase("daily") || args[0].equalsIgnoreCase("täglich")) {
                 // Claim daily reward
@@ -86,6 +100,19 @@ public class RewardsCommand implements CommandExecutor {
             } else if (args[0].equalsIgnoreCase("info")) {
                 // Show rewards info
                 return showRewardsInfo(player);
+            } else if (args[0].equalsIgnoreCase("menu")) {
+                // Open rewards menu
+                if (menuHandler != null) {
+                    menuHandler.openRewardsMenu(player);
+                    return true;
+                } else {
+                    plugin.getAPI().getPlayerAPI().sendMessage(
+                            player,
+                            "general.error",
+                            null
+                    );
+                    return false;
+                }
             }
         }
         
@@ -250,7 +277,7 @@ public class RewardsCommand implements CommandExecutor {
      * @param player The player claiming the reward
      * @return True if the reward was claimed successfully
      */
-    private boolean claimDailyReward(Player player) {
+    public boolean claimDailyReward(Player player) {
         try {
             Connection conn = plugin.getConfigManager().getDbConnection();
             String tablePrefix = plugin.getConfigManager().getTablePrefix();
@@ -411,7 +438,7 @@ public class RewardsCommand implements CommandExecutor {
      * @param player The player claiming the reward
      * @return True if the reward was claimed successfully
      */
-    private boolean claimWeeklyReward(Player player) {
+    public boolean claimWeeklyReward(Player player) {
         try {
             Connection conn = plugin.getConfigManager().getDbConnection();
             String tablePrefix = plugin.getConfigManager().getTablePrefix();
@@ -522,7 +549,7 @@ public class RewardsCommand implements CommandExecutor {
      * @param player The player claiming the reward
      * @return True if the reward was claimed successfully
      */
-    private boolean claimMonthlyReward(Player player) {
+    public boolean claimMonthlyReward(Player player) {
         try {
             Connection conn = plugin.getConfigManager().getDbConnection();
             String tablePrefix = plugin.getConfigManager().getTablePrefix();

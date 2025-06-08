@@ -1,6 +1,7 @@
 package ch.retaxo.sumania.commands;
 
 import ch.retaxo.sumania.Sumania;
+import ch.retaxo.sumania.commands.admin.BanCommand;
 import ch.retaxo.sumania.commands.admin.ReloadCommand;
 import ch.retaxo.sumania.commands.chat.ChatCommand;
 import ch.retaxo.sumania.commands.discord.DiscordCommand;
@@ -43,7 +44,10 @@ public class CommandManager {
         
         // Register economy commands if enabled
         if (config.getBoolean("commands.economy", true)) {
-            registerCommand("balance", new BalanceCommand(plugin));
+            BalanceCommand balanceCommand = new BalanceCommand(plugin);
+            registerCommand("balance", balanceCommand);
+            registerCommand("bal", balanceCommand);
+            registerCommand("eco", balanceCommand);
             registerCommand("pay", new PayCommand(plugin));
         }
         
@@ -93,6 +97,15 @@ public class CommandManager {
         // Register rewards commands if enabled
         if (config.getBoolean("commands.rewards", true)) {
             registerCommand("rewards", new RewardsCommand(plugin));
+        }
+        
+        // Register ban commands if enabled
+        if (config.getBoolean("commands.ban", true)) {
+            BanCommand banCommand = new BanCommand(plugin);
+            registerCommand("ban", banCommand);
+            registerCommand("tempban", banCommand);
+            registerCommand("unban", banCommand);
+            registerCommand("lookup", banCommand);
         }
     }
     

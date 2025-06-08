@@ -22,6 +22,14 @@ commands:
     usage: /pay <Spieler> <Betrag>
     aliases: [bezahlen, zahlen]
     permission: sumania.economy.pay
+  eco:
+    description: Admin-Wirtschaftsbefehle
+    usage: /eco <set|add|remove|get> <Spieler> <Betrag>
+    permission: sumania.economy.admin
+  bal:
+    description: Prüfe dein Guthaben (Kurzform)
+    usage: /bal [Spieler]
+    permission: sumania.economy.balance
   
   # Teleport commands
   tp:
@@ -122,6 +130,25 @@ commands:
     usage: /rewards [daily|weekly|monthly]
     aliases: [belohnungen, reward, belohnung]
     permission: sumania.rewards
+    
+  # Ban commands
+  ban:
+    description: Spieler permanent bannen
+    usage: /ban <Spieler> <Grund>
+    permission: sumania.ban
+  tempban:
+    description: Spieler temporär bannen
+    usage: /tempban <Spieler> <Dauer> <Grund>
+    aliases: [tban]
+    permission: sumania.ban
+  unban:
+    description: Spieler entbannen
+    usage: /unban <Spieler>
+    permission: sumania.ban
+  lookup:
+    description: Spielerinformationen anzeigen
+    usage: /lookup <Spieler>
+    permission: sumania.lookup
 
 permissions:
   sumania.admin:
@@ -141,6 +168,9 @@ permissions:
   sumania.economy.pay:
     description: Erlaubt das Bezahlen anderer Spieler
     default: true
+  sumania.economy.admin:
+    description: Erlaubt das Verwalten der Wirtschaft
+    default: op
   
   # Teleport permissions
   sumania.teleport.tp:
@@ -240,4 +270,12 @@ permissions:
     default: true
   sumania.rewards.admin:
     description: Erlaubt das Verwalten der Belohnungen
+    default: op
+    
+  # Ban permissions
+  sumania.ban:
+    description: Erlaubt das Bannen und Entbannen von Spielern
+    default: op
+  sumania.lookup:
+    description: Erlaubt das Anzeigen von Spielerinformationen
     default: op

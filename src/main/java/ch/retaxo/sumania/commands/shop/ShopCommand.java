@@ -116,9 +116,8 @@ public class ShopCommand implements CommandExecutor, Listener {
             return;
         }
         
-        // Calculate menu size
-        int categoryCount = categoriesSection.getKeys(false).size();
-        int rows = Math.min(6, Math.max(1, (int) Math.ceil(categoryCount / 9.0)));
+        // Fixed size for better design
+        int rows = 6;
         
         // Create inventory
         String menuTitle = messages.getString("shop.shop-menu-title", "&8[&6Shop&8]");
@@ -126,23 +125,74 @@ public class ShopCommand implements CommandExecutor, Listener {
         
         Inventory menu = Bukkit.createInventory(null, rows * 9, menuTitle);
         
-        // Add category items
-        int slot = 0;
-        for (String categoryId : categoriesSection.getKeys(false)) {
+        // Initialize menu with glass panes as decoration
+        ItemStack glassPane = createDecorativeItem(Material.BLACK_STAINED_GLASS_PANE, " ");
+        for (int i = 0; i < menu.getSize(); i++) {
+            menu.setItem(i, glassPane);
+        }
+        
+        // Add a banner for header
+        ItemStack banner = createDecorativeItem(Material.WHITE_BANNER, "§6§lAdmin Shop");
+        List<String> bannerLore = new ArrayList<>();
+        bannerLore.add("§7Willkommen im Admin Shop!");
+        bannerLore.add("§7Hier kannst du Items kaufen und verkaufen.");
+        bannerLore.add("");
+        bannerLore.add("§a§lLinksklick§7: Kaufen");
+        bannerLore.add("§c§lRechtsklick§7: Verkaufen");
+        bannerLore.add("");
+        bannerLore.add("§7Guthaben: §e" + plugin.getAPI().getEconomyAPI().format(plugin.getAPI().getEconomyAPI().getBalance(player)));
+        
+        ItemMeta bannerMeta = banner.getItemMeta();
+        bannerMeta.setLore(bannerLore);
+        banner.setItemMeta(bannerMeta);
+        
+        // Add header banner
+        menu.setItem(4, banner);
+        
+        // Get category list
+        List<String> categoryIds = new ArrayList<>(categoriesSection.getKeys(false));
+        
+        // Calculate layout
+        int totalCategories = categoryIds.size();
+        int middle = Math.min(7, totalCategories);
+        int startSlot = (9 - middle) / 2 + 9; // Center in second row
+        
+        // Add category items in a grid layout
+        for (int i = 0; i < totalCategories; i++) {
+            String categoryId = categoryIds.get(i);
             ConfigurationSection categorySection = categoriesSection.getConfigurationSection(categoryId);
             
             if (categorySection != null) {
                 // Create category item
                 ItemStack item = createCategoryItem(categoryId, categorySection);
                 
+                // Calculate position
+                int row = (i / 7) + 2; // Start from row 2
+                int col = (i % 7) + 1; // Center in the row
+                
+                int slot = row * 9 + col;
                 if (slot < menu.getSize()) {
-                    menu.setItem(slot++, item);
+                    menu.setItem(slot, item);
                 }
             }
         }
         
         // Open inventory
         player.openInventory(menu);
+    }
+    
+    /**
+     * Create a decorative item for the menu
+     * @param material The material to use
+     * @param name The display name
+     * @return The created item
+     */
+    private ItemStack createDecorativeItem(Material material, String name) {
+        ItemStack item = new ItemStack(material);
+        ItemMeta meta = item.getItemMeta();
+        meta.setDisplayName(name);
+        item.setItemMeta(meta);
+        return item;
     }
     
     /**
@@ -224,8 +274,8 @@ public class ShopCommand implements CommandExecutor, Listener {
             return;
         }
         
-        // Calculate menu size
-        int rows = Math.min(6, Math.max(1, (int) Math.ceil(items.size() / 9.0)));
+        // Fixed size for better design
+        int rows = 6;
         
         // Create inventory
         String categoryName = categorySection.getString("display-name", "§a" + categoryId);
@@ -234,9 +284,45 @@ public class ShopCommand implements CommandExecutor, Listener {
         
         Inventory menu = Bukkit.createInventory(null, rows * 9, menuTitle);
         
-        // Add item items
-        int slot = 0;
-        for (Map<?, ?> itemMap : items) {
+        // Initialize menu with glass panes as decoration
+        ItemStack glassPane = createDecorativeItem(Material.BLACK_STAINED_GLASS_PANE, " ");
+        for (int i = 0; i < menu.getSize(); i++) {
+            menu.setItem(i, glassPane);
+        }
+        
+        // Add a header with instructions
+        ItemStack infoItem = createDecorativeItem(Material.BOOK, "§6§lShop: " + categoryName);
+        List<String> infoLore = new ArrayList<>();
+        infoLore.add("§7Klicke auf ein Item, um es zu kaufen oder zu verkaufen.");
+        infoLore.add("");
+        infoLore.add("§a§lLinksklick§7: Kaufen");
+        infoLore.add("§c§lRechtsklick§7: Verkaufen");
+        infoLore.add("");
+        infoLore.add("§7Guthaben: §e" + plugin.getAPI().getEconomyAPI().format(plugin.getAPI().getEconomyAPI().getBalance(player)));
+        
+        ItemMeta infoMeta = infoItem.getItemMeta();
+        infoMeta.setLore(infoLore);
+        infoItem.setItemMeta(infoMeta);
+        
+        menu.setItem(4, infoItem);
+        
+        // Add back button
+        ItemStack backButton = createDecorativeItem(Material.ARROW, "§c§lZurück zum Hauptmenü");
+        ItemMeta backMeta = backButton.getItemMeta();
+        backMeta.setLore(List.of("§7Klicke, um zurück zum Hauptmenü zu gelangen"));
+        backMeta.getPersistentDataContainer().set(categoryKey, PersistentDataType.STRING, "back");
+        backButton.setItemMeta(backMeta);
+        menu.setItem(0, backButton);
+        
+        // Calculate grid layout for items
+        int totalItems = items.size();
+        int availableSlots = rows * 9 - 9; // Reserve top row for navigation
+        int effectiveRows = rows - 1;
+        
+        // Add shop items in a grid layout
+        for (int i = 0; i < Math.min(totalItems, availableSlots); i++) {
+            Map<?, ?> itemMap = items.get(i);
+            
             // Get item data
             String itemName = (String) itemMap.get("item");
             double buyPrice = ((Number) itemMap.get("buy-price")).doubleValue();
@@ -245,8 +331,13 @@ public class ShopCommand implements CommandExecutor, Listener {
             // Create shop item
             ItemStack item = createShopItem(itemName, buyPrice, sellPrice);
             
+            // Calculate position
+            int row = (i / 7) + 1; // Start from row 1 (after header)
+            int col = (i % 7) + 1; // Center in the row
+            
+            int slot = row * 9 + col;
             if (slot < menu.getSize()) {
-                menu.setItem(slot++, item);
+                menu.setItem(slot, item);
             }
         }
         
@@ -265,35 +356,53 @@ public class ShopCommand implements CommandExecutor, Listener {
         FileConfiguration messages = plugin.getConfigManager().getConfig("messages.yml");
         FileConfiguration config = plugin.getConfigManager().getConfig("config.yml");
         String currencySymbol = config.getString("economy.currency-symbol", "$");
+        String currencyName = config.getString("economy.currency-name", "Coins");
         
         // Create item
         Material material = Material.valueOf(itemName);
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
         
-        // Set display name
-        meta.setDisplayName("§a" + material.name().replace("_", " "));
+        // Set display name - make it nicer with proper casing
+        String displayName = material.name().replace("_", " ");
+        displayName = displayName.substring(0, 1).toUpperCase() + displayName.substring(1).toLowerCase();
+        meta.setDisplayName("§a" + displayName);
         
         // Set lore
         List<String> lore = new ArrayList<>();
         
-        // Add buy price
-        String buyPriceText = messages.getString("shop.buy-price", "&aKaufen: &6%price% %currency%");
-        buyPriceText = buyPriceText.replace("&", "§")
+        // Add divider
+        lore.add("§8§m---------------------------");
+        
+        // Add buy price with color based on affordability
+        String buyPriceFormat = "§a▶ §7Kaufen: §e%price% %currency%";
+        String buyPriceText = buyPriceFormat
                 .replace("%price%", String.format("%.0f", buyPrice))
                 .replace("%currency%", currencySymbol);
         lore.add(buyPriceText);
         
-        // Add sell price
-        String sellPriceText = messages.getString("shop.sell-price", "&aVerkaufen: &6%price% %currency%");
-        sellPriceText = sellPriceText.replace("&", "§")
+        // Add sell price with highlight
+        String sellPriceFormat = "§c◀ §7Verkaufen: §e%price% %currency%";
+        String sellPriceText = sellPriceFormat
                 .replace("%price%", String.format("%.0f", sellPrice))
                 .replace("%currency%", currencySymbol);
         lore.add(sellPriceText);
         
-        // Add click instructions
-        lore.add(messages.getString("shop.click-to-buy", "&7Linksklick zum Kaufen").replace("&", "§"));
-        lore.add(messages.getString("shop.click-to-sell", "&7Rechtsklick zum Verkaufen").replace("&", "§"));
+        // Add divider
+        lore.add("§8§m---------------------------");
+        
+        // Add click instructions with colors
+        lore.add("§a▶ §fLinksklick §7zum Kaufen");
+        lore.add("§c◀ §fRechtsklick §7zum Verkaufen");
+        
+        // Add price difference info if buy/sell has a difference
+        if (buyPrice > sellPrice) {
+            double priceDiff = buyPrice - sellPrice;
+            double percentage = (priceDiff / buyPrice) * 100;
+            lore.add("");
+            lore.add(String.format("§7Händlergebühr: §c%.0f %s §7(%.0f%%)", 
+                    priceDiff, currencySymbol, percentage));
+        }
         
         meta.setLore(lore);
         
@@ -329,19 +438,27 @@ public class ShopCommand implements CommandExecutor, Listener {
             // Check if clicked on an item
             if (event.getCurrentItem() != null && event.getCurrentItem().hasItemMeta()) {
                 ItemMeta meta = event.getCurrentItem().getItemMeta();
+                Player player = (Player) event.getWhoClicked();
                 
                 // Check if clicked on a category item
                 if (meta.getPersistentDataContainer().has(categoryKey, PersistentDataType.STRING)) {
                     String categoryId = meta.getPersistentDataContainer().get(categoryKey, PersistentDataType.STRING);
                     
                     if (categoryId != null) {
-                        Player player = (Player) event.getWhoClicked();
-                        
-                        // Close current inventory
-                        player.closeInventory();
-                        
-                        // Open category menu
-                        openCategoryMenu(player, categoryId);
+                        // Check if it's the back button
+                        if (categoryId.equals("back")) {
+                            // Close current inventory
+                            player.closeInventory();
+                            
+                            // Open main menu
+                            openMainShopMenu(player);
+                        } else {
+                            // Close current inventory
+                            player.closeInventory();
+                            
+                            // Open category menu
+                            openCategoryMenu(player, categoryId);
+                        }
                     }
                     
                     return;
@@ -352,8 +469,6 @@ public class ShopCommand implements CommandExecutor, Listener {
                     String itemData = meta.getPersistentDataContainer().get(itemKey, PersistentDataType.STRING);
                     
                     if (itemData != null) {
-                        Player player = (Player) event.getWhoClicked();
-                        
                         // Parse item data
                         String[] parts = itemData.split(":");
                         String itemName = parts[0];
@@ -364,13 +479,44 @@ public class ShopCommand implements CommandExecutor, Listener {
                         if (event.getClick() == ClickType.LEFT) {
                             // Buy item
                             buyItem(player, itemName, buyPrice);
+                            
+                            // Update balance display in menu after purchase
+                            updateBalanceDisplay(player, event.getInventory());
                         } else if (event.getClick() == ClickType.RIGHT) {
                             // Sell item
                             sellItem(player, itemName, sellPrice);
+                            
+                            // Update balance display in menu after sale
+                            updateBalanceDisplay(player, event.getInventory());
                         }
                     }
                 }
             }
+        }
+    }
+    
+    /**
+     * Update the balance display in a menu
+     * @param player The player
+     * @param inventory The inventory to update
+     */
+    private void updateBalanceDisplay(Player player, Inventory inventory) {
+        ItemStack infoItem = inventory.getItem(4);
+        
+        if (infoItem != null && infoItem.hasItemMeta() && infoItem.getItemMeta().hasLore()) {
+            ItemMeta meta = infoItem.getItemMeta();
+            List<String> lore = meta.getLore();
+            
+            // Update balance line (last line)
+            for (int i = 0; i < lore.size(); i++) {
+                if (lore.get(i).startsWith("§7Guthaben:")) {
+                    lore.set(i, "§7Guthaben: §e" + plugin.getAPI().getEconomyAPI().format(plugin.getAPI().getEconomyAPI().getBalance(player)));
+                    break;
+                }
+            }
+            
+            meta.setLore(lore);
+            infoItem.setItemMeta(meta);
         }
     }
     
@@ -410,7 +556,7 @@ public class ShopCommand implements CommandExecutor, Listener {
         }
         
         // Withdraw money
-        plugin.getAPI().getEconomyAPI().withdrawMoney(player, price);
+        plugin.getAPI().getEconomyAPI().withdraw(player, price);
         
         // Send confirmation
         Map<String, String> replacements = new HashMap<>();
@@ -455,7 +601,7 @@ public class ShopCommand implements CommandExecutor, Listener {
         player.getInventory().removeItem(item);
         
         // Deposit money
-        plugin.getAPI().getEconomyAPI().depositMoney(player, price);
+        plugin.getAPI().getEconomyAPI().deposit(player, price);
         
         // Send confirmation
         Map<String, String> replacements = new HashMap<>();

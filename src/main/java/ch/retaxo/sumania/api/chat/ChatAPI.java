@@ -42,10 +42,13 @@ public class ChatAPI {
         
         String format = config.getString("chat.format", "§8[§6%rank%§8] §7%player% §8» §f%message%");
         
-        // Replace placeholders
+        // Replace basic placeholders
         format = format.replace("%player%", player.getName());
         format = format.replace("%message%", message);
         format = format.replace("%rank%", "Player"); // TODO: Implement rank system
+        
+        // Process other placeholders
+        format = plugin.getAPI().getPlayerAPI().processPlaceholders(player, format);
         
         return format;
     }

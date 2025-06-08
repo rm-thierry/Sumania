@@ -5,11 +5,14 @@ import ch.retaxo.sumania.models.Home;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -182,6 +185,21 @@ public class PlayerAPI {
             }
         }
         
+        // Process general placeholders if sender is a player
+        if (replacements != null && replacements.containsKey("player_obj")) {
+            String playerObjStr = replacements.get("player_obj");
+            if (playerObjStr != null && playerObjStr.equals("true")) {
+                Player player = null;
+                if (replacements.containsKey("player_name")) {
+                    player = Bukkit.getPlayer(replacements.get("player_name"));
+                }
+                
+                if (player != null) {
+                    message = processPlaceholders(player, message);
+                }
+            }
+        }
+        
         return message;
     }
     
@@ -242,5 +260,381 @@ public class PlayerAPI {
         
         // Add prefix to the message
         return prefix + getMessage(path, replacements);
+    }
+    
+    /**
+     * Get the number of kills for a player
+     * @param player The player
+     * @return The number of kills
+     */
+    public int getKills(OfflinePlayer player) {
+        FileConfiguration data = plugin.getConfigManager().getConfig("data.yml");
+        String path = "players." + player.getUniqueId() + ".stats.kills";
+        
+        return data.getInt(path, 0);
+    }
+    
+    /**
+     * Set the number of kills for a player
+     * @param player The player
+     * @param kills The number of kills
+     */
+    public void setKills(OfflinePlayer player, int kills) {
+        FileConfiguration data = plugin.getConfigManager().getConfig("data.yml");
+        String path = "players." + player.getUniqueId();
+        
+        // Ensure player exists in data file
+        if (!data.contains(path + ".name")) {
+            data.set(path + ".name", player.getName());
+        }
+        
+        // Set the kills
+        data.set(path + ".stats.kills", kills);
+        
+        // Save the data file
+        plugin.getConfigManager().saveConfig("data.yml");
+    }
+    
+    /**
+     * Increment the number of kills for a player
+     * @param player The player
+     * @return The new number of kills
+     */
+    public int incrementKills(OfflinePlayer player) {
+        int kills = getKills(player);
+        kills++;
+        setKills(player, kills);
+        return kills;
+    }
+    
+    /**
+     * Get the number of deaths for a player
+     * @param player The player
+     * @return The number of deaths
+     */
+    public int getDeaths(OfflinePlayer player) {
+        FileConfiguration data = plugin.getConfigManager().getConfig("data.yml");
+        String path = "players." + player.getUniqueId() + ".stats.deaths";
+        
+        return data.getInt(path, 0);
+    }
+    
+    /**
+     * Set the number of deaths for a player
+     * @param player The player
+     * @param deaths The number of deaths
+     */
+    public void setDeaths(OfflinePlayer player, int deaths) {
+        FileConfiguration data = plugin.getConfigManager().getConfig("data.yml");
+        String path = "players." + player.getUniqueId();
+        
+        // Ensure player exists in data file
+        if (!data.contains(path + ".name")) {
+            data.set(path + ".name", player.getName());
+        }
+        
+        // Set the deaths
+        data.set(path + ".stats.deaths", deaths);
+        
+        // Save the data file
+        plugin.getConfigManager().saveConfig("data.yml");
+    }
+    
+    /**
+     * Increment the number of deaths for a player
+     * @param player The player
+     * @return The new number of deaths
+     */
+    public int incrementDeaths(OfflinePlayer player) {
+        int deaths = getDeaths(player);
+        deaths++;
+        setDeaths(player, deaths);
+        return deaths;
+    }
+    
+    /**
+     * Ban a player
+     * @param target The player to ban
+     * @param reason The reason for the ban
+     * @param admin The admin who issued the ban
+     * @param duration The duration of the ban in milliseconds, or -1 for permanent
+     * @return True if the player was banned successfully
+     */
+    public boolean banPlayer(OfflinePlayer target, String reason, String admin, long duration) {
+        FileConfiguration data = plugin.getConfigManager().getConfig("data.yml");
+        String path = "players." + target.getUniqueId();
+        String banPath = path + ".ban";
+        
+        // Ensure player exists in data file
+        if (!data.contains(path + ".name")) {
+            data.set(path + ".name", target.getName());
+        }
+        
+        // Set ban information
+        long now = System.currentTimeMillis();
+        data.set(banPath + ".active", true);
+        data.set(banPath + ".reason", reason);
+        data.set(banPath + ".admin", admin);
+        data.set(banPath + ".time", now);
+        
+        if (duration > 0) {
+            data.set(banPath + ".until", now + duration);
+        } else {
+            data.set(banPath + ".until", -1); // Permanent
+        }
+        
+        // Save the data file
+        plugin.getConfigManager().saveConfig("data.yml");
+        
+        // Kick the player if online
+        if (target.isOnline()) {
+            Player player = target.getPlayer();
+            if (player != null) {
+                String banMessage = formatBanMessage(reason, admin, now + duration);
+                player.kickPlayer(banMessage);
+            }
+        }
+        
+        // Broadcast ban message
+        String banMessage = "§c" + target.getName() + " §7wurde von §c" + admin + " §7gebannt.";
+        String durationStr = formatDuration(duration);
+        if (duration > 0) {
+            banMessage += " §7Dauer: §c" + durationStr;
+        } else {
+            banMessage += " §7Dauer: §cPermanent";
+        }
+        banMessage += " §7Grund: §c" + reason;
+        plugin.getAPI().getChatAPI().broadcast(banMessage);
+        
+        return true;
+    }
+    
+    /**
+     * Unban a player
+     * @param target The player to unban
+     * @param admin The admin who issued the unban
+     * @return True if the player was unbanned successfully
+     */
+    public boolean unbanPlayer(OfflinePlayer target, String admin) {
+        FileConfiguration data = plugin.getConfigManager().getConfig("data.yml");
+        String path = "players." + target.getUniqueId() + ".ban";
+        
+        if (!data.contains(path + ".active") || !data.getBoolean(path + ".active")) {
+            return false; // Player is not banned
+        }
+        
+        // Set ban to inactive
+        data.set(path + ".active", false);
+        data.set(path + ".unbanned_by", admin);
+        data.set(path + ".unbanned_time", System.currentTimeMillis());
+        
+        // Save the data file
+        plugin.getConfigManager().saveConfig("data.yml");
+        
+        // Broadcast unban message
+        String unbanMessage = "§a" + target.getName() + " §7wurde von §a" + admin + " §7entbannt.";
+        plugin.getAPI().getChatAPI().broadcast(unbanMessage);
+        
+        return true;
+    }
+    
+    /**
+     * Check if a player is banned
+     * @param player The player to check
+     * @return True if the player is banned
+     */
+    public boolean isBanned(OfflinePlayer player) {
+        FileConfiguration data = plugin.getConfigManager().getConfig("data.yml");
+        String path = "players." + player.getUniqueId() + ".ban";
+        
+        if (!data.contains(path + ".active") || !data.getBoolean(path + ".active")) {
+            return false; // Player is not banned
+        }
+        
+        // Check if ban has expired
+        long until = data.getLong(path + ".until", -1);
+        if (until == -1) {
+            return true; // Permanent ban
+        }
+        
+        if (System.currentTimeMillis() > until) {
+            // Ban has expired, set to inactive
+            data.set(path + ".active", false);
+            data.set(path + ".expired", true);
+            plugin.getConfigManager().saveConfig("data.yml");
+            return false;
+        }
+        
+        return true; // Player is still banned
+    }
+    
+    /**
+     * Get the ban reason for a player
+     * @param player The player to check
+     * @return The ban reason, or null if the player is not banned
+     */
+    public String getBanReason(OfflinePlayer player) {
+        if (!isBanned(player)) {
+            return null;
+        }
+        
+        FileConfiguration data = plugin.getConfigManager().getConfig("data.yml");
+        String path = "players." + player.getUniqueId() + ".ban";
+        
+        return data.getString(path + ".reason", "No reason specified");
+    }
+    
+    /**
+     * Get the ban expiration time for a player
+     * @param player The player to check
+     * @return The ban expiration time in milliseconds, or -1 if permanent
+     */
+    public long getBanExpiration(OfflinePlayer player) {
+        if (!isBanned(player)) {
+            return 0;
+        }
+        
+        FileConfiguration data = plugin.getConfigManager().getConfig("data.yml");
+        String path = "players." + player.getUniqueId() + ".ban";
+        
+        return data.getLong(path + ".until", -1);
+    }
+    
+    /**
+     * Format a ban message for a player
+     * @param reason The reason for the ban
+     * @param admin The admin who issued the ban
+     * @param until The ban expiration time in milliseconds, or -1 for permanent
+     * @return The formatted ban message
+     */
+    public String formatBanMessage(String reason, String admin, long until) {
+        StringBuilder message = new StringBuilder();
+        message.append("§c§lDu wurdest gebannt!\n\n");
+        message.append("§7Grund: §f").append(reason).append("\n");
+        message.append("§7Gebannt von: §f").append(admin).append("\n");
+        
+        if (until > 0) {
+            Date date = new Date(until);
+            SimpleDateFormat format = new SimpleDateFormat("dd.MM.yyyy HH:mm");
+            message.append("§7Gebannt bis: §f").append(format.format(date)).append("\n");
+            
+            long duration = until - System.currentTimeMillis();
+            message.append("§7Dauer: §f").append(formatDuration(duration)).append("\n");
+        } else {
+            message.append("§7Gebannt bis: §4PERMANENT\n");
+        }
+        
+        message.append("\n§7Bei Fragen wende dich an einen Administrator.");
+        
+        return message.toString();
+    }
+    
+    /**
+     * Format a duration in milliseconds to a human-readable string
+     * @param duration The duration in milliseconds
+     * @return The formatted duration
+     */
+    public String formatDuration(long duration) {
+        if (duration < 0) {
+            return "Permanent";
+        }
+        
+        long seconds = duration / 1000;
+        long minutes = seconds / 60;
+        long hours = minutes / 60;
+        long days = hours / 24;
+        
+        StringBuilder sb = new StringBuilder();
+        
+        if (days > 0) {
+            sb.append(days).append(" Tag").append(days == 1 ? "" : "e").append(" ");
+        }
+        
+        if (hours % 24 > 0) {
+            sb.append(hours % 24).append(" Stunde").append(hours % 24 == 1 ? "" : "n").append(" ");
+        }
+        
+        if (minutes % 60 > 0) {
+            sb.append(minutes % 60).append(" Minute").append(minutes % 60 == 1 ? "" : "n").append(" ");
+        }
+        
+        if (seconds % 60 > 0 && days == 0 && hours == 0) {
+            sb.append(seconds % 60).append(" Sekunde").append(seconds % 60 == 1 ? "" : "n");
+        }
+        
+        return sb.toString().trim();
+    }
+    
+    /**
+     * Get the ban history for a player
+     * @param player The player to check
+     * @return A list of ban entries
+     */
+    public List<Map<String, Object>> getBanHistory(OfflinePlayer player) {
+        List<Map<String, Object>> history = new ArrayList<>();
+        FileConfiguration data = plugin.getConfigManager().getConfig("data.yml");
+        String path = "players." + player.getUniqueId() + ".ban_history";
+        
+        if (!data.contains(path)) {
+            return history;
+        }
+        
+        ConfigurationSection historySection = data.getConfigurationSection(path);
+        if (historySection == null) {
+            return history;
+        }
+        
+        for (String key : historySection.getKeys(false)) {
+            ConfigurationSection entrySection = historySection.getConfigurationSection(key);
+            if (entrySection != null) {
+                Map<String, Object> entry = new HashMap<>();
+                entry.put("reason", entrySection.getString("reason", "No reason specified"));
+                entry.put("admin", entrySection.getString("admin", "Unknown"));
+                entry.put("time", entrySection.getLong("time", 0));
+                entry.put("until", entrySection.getLong("until", -1));
+                entry.put("active", entrySection.getBoolean("active", false));
+                entry.put("expired", entrySection.getBoolean("expired", false));
+                entry.put("unbanned_by", entrySection.getString("unbanned_by", null));
+                entry.put("unbanned_time", entrySection.getLong("unbanned_time", 0));
+                
+                history.add(entry);
+            }
+        }
+        
+        return history;
+    }
+    
+    /**
+     * Process placeholders in a string
+     * @param player The player to get data for
+     * @param input The input string with placeholders
+     * @return The processed string
+     */
+    public String processPlaceholders(Player player, String input) {
+        if (input == null) return "";
+        
+        // Player placeholders
+        input = input.replace("%player%", player.getName());
+        input = input.replace("%displayname%", player.getDisplayName());
+        input = input.replace("%uuid%", player.getUniqueId().toString());
+        
+        // Stats placeholders
+        input = input.replace("%kills%", String.valueOf(getKills(player)));
+        input = input.replace("%deaths%", String.valueOf(getDeaths(player)));
+        
+        // Economy placeholders
+        double balance = plugin.getAPI().getEconomyAPI().getBalance(player);
+        String formatted = plugin.getAPI().getEconomyAPI().format(balance);
+        String raw = String.format("%.2f", balance);
+        input = input.replace("%balance%", formatted);
+        input = input.replace("%balance_raw%", raw);
+        input = input.replace("%currency%", plugin.getAPI().getEconomyAPI().getCurrencyName());
+        input = input.replace("%currency_symbol%", plugin.getAPI().getEconomyAPI().getCurrencySymbol());
+        
+        // Server placeholders
+        input = input.replace("%online%", String.valueOf(Bukkit.getOnlinePlayers().size()));
+        input = input.replace("%max_players%", String.valueOf(Bukkit.getMaxPlayers()));
+        
+        return input;
     }
 }

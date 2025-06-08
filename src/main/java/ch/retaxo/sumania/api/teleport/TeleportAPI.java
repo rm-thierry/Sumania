@@ -457,24 +457,44 @@ public class TeleportAPI {
         // Create inventory
         Inventory menu = Bukkit.createInventory(null, menuRows * 9, menuTitle);
         
-        // Add warp items
-        int slot = 0;
+        // Initialize menu with glass panes as decoration
+        ItemStack glassPane = createDecorativeItem(Material.BLACK_STAINED_GLASS_PANE, " ");
+        for (int i = 0; i < menu.getSize(); i++) {
+            menu.setItem(i, glassPane);
+        }
+        
+        // Filter warps the player can access
+        List<Map.Entry<String, Location>> accessibleWarps = new ArrayList<>();
         for (Map.Entry<String, Location> entry : warps.entrySet()) {
+            String warpName = entry.getKey();
+            if (player.hasPermission("sumania.warp.use." + warpName.toLowerCase()) ||
+                player.hasPermission("sumania.warp.use.*")) {
+                accessibleWarps.add(entry);
+            }
+        }
+        
+        // Calculate grid layout
+        int warpCount = accessibleWarps.size();
+        int rows = Math.min(menuRows - 2, (int) Math.ceil(warpCount / 7.0));
+        int startRow = (menuRows - rows) / 2;
+        
+        // Add warp items in a grid layout
+        for (int i = 0; i < accessibleWarps.size(); i++) {
+            Map.Entry<String, Location> entry = accessibleWarps.get(i);
             String warpName = entry.getKey();
             Location warpLocation = entry.getValue();
             
-            // Skip if player doesn't have permission to use this warp
-            if (!player.hasPermission("sumania.warp.use." + warpName.toLowerCase()) &&
-                !player.hasPermission("sumania.warp.use.*")) {
-                continue;
-            }
+            // Calculate position in grid
+            int row = i / 7;
+            int col = i % 7 + 1; // +1 to center in the row
             
             // Create item for warp
             ItemStack item = createWarpItem(warpName, warpLocation);
             
-            // Add to inventory if there's space
+            // Add to inventory
+            int slot = (startRow + row) * 9 + col;
             if (slot < menu.getSize()) {
-                menu.setItem(slot++, item);
+                menu.setItem(slot, item);
             } else {
                 break;
             }
@@ -482,6 +502,20 @@ public class TeleportAPI {
         
         // Open inventory for player
         player.openInventory(menu);
+    }
+    
+    /**
+     * Create a decorative item for the menu
+     * @param material The material to use
+     * @param name The display name
+     * @return The created item
+     */
+    private ItemStack createDecorativeItem(Material material, String name) {
+        ItemStack item = new ItemStack(material);
+        ItemMeta meta = item.getItemMeta();
+        meta.setDisplayName(name);
+        item.setItemMeta(meta);
+        return item;
     }
     
     /**
@@ -493,14 +527,38 @@ public class TeleportAPI {
     private ItemStack createWarpItem(String warpName, Location location) {
         FileConfiguration messages = plugin.getConfigManager().getConfig("messages.yml");
         
-        // Determine item material based on location environment
+        // Determine item material based on location environment and warp name
         Material material;
-        if (location.getWorld().getEnvironment() == World.Environment.NETHER) {
+        
+        // Check warp name for specific keywords
+        String lowerName = warpName.toLowerCase();
+        if (lowerName.contains("spawn")) {
+            material = Material.BEACON;
+        } else if (lowerName.contains("shop") || lowerName.contains("markt") || lowerName.contains("laden")) {
+            material = Material.EMERALD;
+        } else if (lowerName.contains("mine") || lowerName.contains("bergwerk")) {
+            material = Material.DIAMOND_PICKAXE;
+        } else if (lowerName.contains("farm")) {
+            material = Material.WHEAT;
+        } else if (lowerName.contains("arena") || lowerName.contains("pvp")) {
+            material = Material.IRON_SWORD;
+        } else if (lowerName.contains("wald") || lowerName.contains("forest")) {
+            material = Material.OAK_LOG;
+        } else if (lowerName.contains("desert") || lowerName.contains("wüste")) {
+            material = Material.SAND;
+        } else if (lowerName.contains("end")) {
+            material = Material.END_PORTAL_FRAME;
+        } else if (lowerName.contains("nether")) {
             material = Material.NETHERRACK;
-        } else if (location.getWorld().getEnvironment() == World.Environment.THE_END) {
-            material = Material.END_STONE;
         } else {
-            material = Material.GRASS_BLOCK;
+            // Default based on world type
+            if (location.getWorld().getEnvironment() == World.Environment.NETHER) {
+                material = Material.NETHERRACK;
+            } else if (location.getWorld().getEnvironment() == World.Environment.THE_END) {
+                material = Material.END_STONE;
+            } else {
+                material = Material.GRASS_BLOCK;
+            }
         }
         
         // Create item
@@ -522,6 +580,10 @@ public class TeleportAPI {
         lore.add("§7Welt: §e" + location.getWorld().getName());
         lore.add(String.format("§7Position: §e%d, %d, %d", 
                 location.getBlockX(), location.getBlockY(), location.getBlockZ()));
+        
+        // Add a hint about permissions
+        lore.add("");
+        lore.add("§7Permission: §esumania.warp.use." + warpName.toLowerCase());
         
         meta.setLore(lore);
         
@@ -549,13 +611,15 @@ public class TeleportAPI {
             event.setCancelled(true);
             
             // Check if clicked on an item
-            if (event.getCurrentItem() != null && event.getCurrentItem().hasItemMeta()) {
-                // Get warp name from item NBT
-                ItemMeta meta = event.getCurrentItem().getItemMeta();
-                NamespacedKey key = new NamespacedKey(plugin, "warp-name");
-                String warpName = meta.getPersistentDataContainer().get(key, PersistentDataType.STRING);
+            ItemStack clickedItem = event.getCurrentItem();
+            if (clickedItem != null && clickedItem.hasItemMeta()) {
+                ItemMeta meta = clickedItem.getItemMeta();
                 
-                if (warpName != null) {
+                // Check if it's a warp item
+                NamespacedKey key = new NamespacedKey(plugin, "warp-name");
+                if (meta.getPersistentDataContainer().has(key, PersistentDataType.STRING)) {
+                    String warpName = meta.getPersistentDataContainer().get(key, PersistentDataType.STRING);
+                    
                     // Get player
                     Player player = (Player) event.getWhoClicked();
                     
@@ -566,6 +630,9 @@ public class TeleportAPI {
                     Location warpLocation = getWarp(warpName);
                     
                     if (warpLocation != null) {
+                        // Play a sound for teleport
+                        player.playSound(player.getLocation(), "entity.enderman.teleport", 0.7f, 1.0f);
+                        
                         // Send teleport message
                         Map<String, String> replacements = new HashMap<>();
                         replacements.put("warp", warpName);
@@ -580,6 +647,7 @@ public class TeleportAPI {
                         teleport(player, warpLocation);
                     }
                 }
+                // Ignore clicks on decorative items
             }
         }
     }
