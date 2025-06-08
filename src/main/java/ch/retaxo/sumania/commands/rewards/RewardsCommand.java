@@ -387,9 +387,7 @@ public class RewardsCommand implements CommandExecutor {
                         
                         upsertStmt.executeUpdate();
                     }
-                    
-                    // Give reward
-                    plugin.getAPI().getEconomyAPI().depositMoney(player, rewardAmount);
+
                     
                     // Send confirmation
                     Map<String, String> replacements = new HashMap<>();
@@ -514,7 +512,7 @@ public class RewardsCommand implements CommandExecutor {
                     FileConfiguration config = plugin.getConfigManager().getConfig("config.yml");
                     double rewardAmount = config.getDouble("rewards.weekly.amount", 500.0);
                     
-                    plugin.getAPI().getEconomyAPI().depositMoney(player, rewardAmount);
+                    plugin.getAPI().getEconomyAPI().deposit(player, rewardAmount);
                     
                     // Send confirmation
                     Map<String, String> replacements = new HashMap<>();
@@ -625,7 +623,7 @@ public class RewardsCommand implements CommandExecutor {
                     FileConfiguration config = plugin.getConfigManager().getConfig("config.yml");
                     double rewardAmount = config.getDouble("rewards.monthly.amount", 2000.0);
                     
-                    plugin.getAPI().getEconomyAPI().depositMoney(player, rewardAmount);
+                    plugin.getAPI().getEconomyAPI().deposit(player, rewardAmount);
                     
                     // Send confirmation
                     Map<String, String> replacements = new HashMap<>();

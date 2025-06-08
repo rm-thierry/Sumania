@@ -7,7 +7,6 @@ import ch.retaxo.sumania.commands.chat.ChatCommand;
 import ch.retaxo.sumania.commands.discord.DiscordCommand;
 import ch.retaxo.sumania.commands.economy.BalanceCommand;
 import ch.retaxo.sumania.commands.economy.PayCommand;
-import ch.retaxo.sumania.commands.lottery.LotteryCommand;
 import ch.retaxo.sumania.commands.rewards.RewardsCommand;
 import ch.retaxo.sumania.commands.shop.ShopCommand;
 import ch.retaxo.sumania.commands.teleport.HomeCommand;
@@ -88,11 +87,7 @@ public class CommandManager {
         if (config.getBoolean("commands.shop", true)) {
             registerCommand("shop", new ShopCommand(plugin));
         }
-        
-        // Register lottery commands if enabled
-        if (config.getBoolean("commands.lottery", true)) {
-            registerCommand("lottery", new LotteryCommand(plugin));
-        }
+
         
         // Register rewards commands if enabled
         if (config.getBoolean("commands.rewards", true)) {
