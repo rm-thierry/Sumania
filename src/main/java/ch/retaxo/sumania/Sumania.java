@@ -7,6 +7,7 @@ import org.bukkit.event.server.ServerListPingEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import ch.retaxo.sumania.config.ConfigManager;
 import ch.retaxo.sumania.api.SumaniaAPI;
+import ch.retaxo.sumania.api.SumaniaPlaceholderExpansion;
 import ch.retaxo.sumania.commands.CommandManager;
 import ch.retaxo.sumania.events.EventManager;
 
@@ -40,6 +41,12 @@ public final class Sumania extends JavaPlugin implements Listener {
         
         // Register this class as listener for MOTD
         getServer().getPluginManager().registerEvents(this, this);
+        
+        // Register PlaceholderAPI expansion if available
+        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            Bukkit.getLogger().info(configManager.getPrefix() + "Found PlaceholderAPI! Registering placeholders...");
+            new SumaniaPlaceholderExpansion(this).register();
+        }
         
         // Log startup
         Bukkit.getLogger().info(configManager.getPrefix() + "Plugin enabled successfully!");

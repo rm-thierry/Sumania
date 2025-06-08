@@ -4,6 +4,7 @@ main: ch.retaxo.sumania.Sumania
 api-version: '1.21'
 description: 'Ein umfassendes SMP-Server-Plugin mit Wirtschaft, Teleportation, Claims und mehr.'
 authors: [retaxo]
+softdepend: [PlaceholderAPI]
 
 commands:
   sumania:

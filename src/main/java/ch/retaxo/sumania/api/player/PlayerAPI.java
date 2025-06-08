@@ -18,6 +18,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+// PlaceholderAPI
+import me.clip.placeholderapi.PlaceholderAPI;
+
 /**
  * API for player-related operations
  */
@@ -613,27 +616,35 @@ public class PlayerAPI {
     public String processPlaceholders(Player player, String input) {
         if (input == null) return "";
         
-        // Player placeholders
-        input = input.replace("%player%", player.getName());
-        input = input.replace("%displayname%", player.getDisplayName());
-        input = input.replace("%uuid%", player.getUniqueId().toString());
-        
-        // Stats placeholders
-        input = input.replace("%kills%", String.valueOf(getKills(player)));
-        input = input.replace("%deaths%", String.valueOf(getDeaths(player)));
-        
-        // Economy placeholders
-        double balance = plugin.getAPI().getEconomyAPI().getBalance(player);
-        String formatted = plugin.getAPI().getEconomyAPI().format(balance);
-        String raw = String.format("%.2f", balance);
-        input = input.replace("%balance%", formatted);
-        input = input.replace("%balance_raw%", raw);
-        input = input.replace("%currency%", plugin.getAPI().getEconomyAPI().getCurrencyName());
-        input = input.replace("%currency_symbol%", plugin.getAPI().getEconomyAPI().getCurrencySymbol());
-        
-        // Server placeholders
-        input = input.replace("%online%", String.valueOf(Bukkit.getOnlinePlayers().size()));
-        input = input.replace("%max_players%", String.valueOf(Bukkit.getMaxPlayers()));
+        // Check if PlaceholderAPI is available
+        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            // Process with PlaceholderAPI
+            input = PlaceholderAPI.setPlaceholders(player, input);
+        } else {
+            // Fall back to our internal placeholder system
+            
+            // Player placeholders
+            input = input.replace("%player%", player.getName());
+            input = input.replace("%displayname%", player.getDisplayName());
+            input = input.replace("%uuid%", player.getUniqueId().toString());
+            
+            // Stats placeholders
+            input = input.replace("%kills%", String.valueOf(getKills(player)));
+            input = input.replace("%deaths%", String.valueOf(getDeaths(player)));
+            
+            // Economy placeholders
+            double balance = plugin.getAPI().getEconomyAPI().getBalance(player);
+            String formatted = plugin.getAPI().getEconomyAPI().format(balance);
+            String raw = String.format("%.2f", balance);
+            input = input.replace("%balance%", formatted);
+            input = input.replace("%balance_raw%", raw);
+            input = input.replace("%currency%", plugin.getAPI().getEconomyAPI().getCurrencyName());
+            input = input.replace("%currency_symbol%", plugin.getAPI().getEconomyAPI().getCurrencySymbol());
+            
+            // Server placeholders
+            input = input.replace("%online%", String.valueOf(Bukkit.getOnlinePlayers().size()));
+            input = input.replace("%max_players%", String.valueOf(Bukkit.getMaxPlayers()));
+        }
         
         return input;
     }
