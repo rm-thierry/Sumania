@@ -85,7 +85,10 @@ smp:
   max-teleport-range: 8000
   # Random Teleport Abklingzeit (in Sekunden)
   rtp-cooldown: 300
-  # Spawn-Koordinaten (werden automatisch gesetzt)
+  # Spawn-Koordinaten für die SMP-Welt
+  # Diese Koordinaten werden für den Weltspawn verwendet und
+  # sind der Ort, an den Spieler teleportiert werden, wenn sie /rtp verwenden
+  # aber sich nicht in der SMP-Welt befinden
   spawn:
     x: 0.0
     y: 64.0

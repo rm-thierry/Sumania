@@ -295,7 +295,17 @@ public class SMPWorldAPI {
             return false;
         }
         
-        // Teleport all players out of the world
+        // First teleport all players to the world spawn
+        Location spawnPoint = activeSMPWorld.getSpawnPoint();
+        if (spawnPoint == null) {
+            spawnPoint = world.getSpawnLocation();
+        }
+        
+        for (Player player : world.getPlayers()) {
+            plugin.getAPI().getTeleportAPI().teleport(player, spawnPoint);
+        }
+        
+        // Then teleport all players out of the world
         for (Player player : world.getPlayers()) {
             teleportFromSMP(player);
         }

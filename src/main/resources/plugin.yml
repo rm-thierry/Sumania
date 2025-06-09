@@ -132,12 +132,12 @@ commands:
     aliases: [belohnungen, reward, belohnung]
     permission: sumania.rewards
     
-  # SMP commands
-  smp:
-    description: SMP-Weltbefehle
-    usage: /smp [join|leave|rtp|info|setworld|setworldspawn|reset|enable|disable]
-    aliases: [survivalmp]
-    permission: sumania.smp
+  # RTP command
+  rtp:
+    description: Teleportiere dich an einen zufälligen Ort in der SMP-Welt
+    usage: /rtp
+    aliases: [randomtp, randomteleport]
+    permission: sumania.rtp
     
   # Ban commands
   ban:
@@ -291,20 +291,8 @@ permissions:
     default: op
     
   # SMP permissions
-  sumania.smp:
-    description: Erlaubt Zugriff auf SMP-Befehle
-    default: true
-  sumania.smp.join:
-    description: Erlaubt das Betreten der SMP-Welt
-    default: true
-  sumania.smp.leave:
-    description: Erlaubt das Verlassen der SMP-Welt
-    default: true
-  sumania.smp.rtp:
+  sumania.rtp:
     description: Erlaubt die Verwendung des Random-Teleports
-    default: true
-  sumania.smp.info:
-    description: Erlaubt das Anzeigen von SMP-Informationen
     default: true
   sumania.smp.admin:
     description: Erlaubt das Verwalten der SMP-Welt
