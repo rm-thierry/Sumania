@@ -216,6 +216,11 @@ public class RandomTeleport {
                             if (isSafeLocation(location)) {
                                 // Teleport the player
                                 plugin.getAPI().getTeleportAPI().teleport(player, location);
+                                plugin.getAPI().getPlayerAPI().sendMessage(
+                                        player,
+                                        "smp.teleported",
+                                        null
+                                );
                                 
                                 // Set cooldown
                                 setCooldown(player);

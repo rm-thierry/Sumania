@@ -136,6 +136,7 @@ smp:
   reset-success: "&aDie SMP-Welt wurde erfolgreich zurückgesetzt."
   reset-failed: "&cDie SMP-Welt konnte nicht zurückgesetzt werden."
   reset-confirm: "&cAchtung! Dies wird die SMP-Welt komplett löschen und neu erstellen. Alle Spielerdaten in dieser Welt gehen verloren! Bestätige mit &e/smp reset confirm&c."
+  teleported: "&aDu wurdest Random zu einem sicheren Ort in der SMP-Welt teleportiert."
   
   # Player-related SMP messages
   joined: "&aDu hast die SMP-Welt betreten."

@@ -471,7 +471,7 @@ public class SMPCommand implements CommandExecutor, TabCompleter {
         if (sender instanceof Player) {
             plugin.getAPI().getPlayerAPI().sendMessage((Player) sender, key, replacements);
         } else {
-            String message = plugin.getAPI().getPlayerAPI().getFormattedMessage(key, replacements);
+            String message = plugin.getAPI().getPlayerAPI().formatMessage(key, replacements);
             message = ChatColor.stripColor(message); // Strip color for console
             sender.sendMessage(message);
         }
