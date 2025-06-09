@@ -84,7 +84,7 @@ smp:
   # Random Teleport Maximalabstand vom Spawn (in Blöcken)
   max-teleport-range: 8000
   # Random Teleport Abklingzeit (in Sekunden)
-  rtp-cooldown: 300
+  rtp-cooldown: 60
   # Spawn-Koordinaten für die SMP-Welt
   # Diese Koordinaten werden für den Weltspawn verwendet und
   # sind der Ort, an den Spieler teleportiert werden, wenn sie /rtp verwenden

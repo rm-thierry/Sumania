@@ -95,8 +95,15 @@ public class CommandManager {
             registerCommand("rewards", new RewardsCommand(plugin));
         }
         
-        // Register RTP command if SMP is enabled
+        // Register SMP commands if SMP is enabled
         if (config.getBoolean("smp.enabled", true)) {
+            // Register SMP command
+            SMPCommand smpCommand = new SMPCommand(plugin);
+            registerCommand("smp", smpCommand);
+            if (plugin.getCommand("smp") != null) {
+                plugin.getCommand("smp").setTabCompleter(smpCommand);
+            }
+            
             // Create a standalone RTP command using the RandomTeleport class
             registerCommand("rtp", new RTPCommand(plugin));
         }

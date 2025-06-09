@@ -36,62 +36,24 @@ public class SMPCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        // First check for admin permission - this command is now admin-only
+        if (!sender.hasPermission("sumania.smp.admin")) {
+            sendMessage(sender, "general.no-permission");
+            return true;
+        }
+        
         if (args.length == 0) {
             return showHelp(sender);
         }
         
         String subCommand = args[0].toLowerCase();
         
+        // Process the specific subcommand
         switch (subCommand) {
             case "help":
                 return showHelp(sender);
                 
-            case "join":
-                if (!(sender instanceof Player)) {
-                    sendMessage(sender, "general.player-only");
-                    return true;
-                }
-                
-                if (!sender.hasPermission("sumania.smp.join")) {
-                    sendMessage(sender, "general.no-permission");
-                    return true;
-                }
-                
-                return joinSMP((Player) sender);
-                
-            case "leave":
-                if (!(sender instanceof Player)) {
-                    sendMessage(sender, "general.player-only");
-                    return true;
-                }
-                
-                if (!sender.hasPermission("sumania.smp.leave")) {
-                    sendMessage(sender, "general.no-permission");
-                    return true;
-                }
-                
-                return leaveSMP((Player) sender);
-                
-            case "rtp":
-            case "randomtp":
-                if (!(sender instanceof Player)) {
-                    sendMessage(sender, "general.player-only");
-                    return true;
-                }
-                
-                if (!sender.hasPermission("sumania.smp.rtp")) {
-                    sendMessage(sender, "general.no-permission");
-                    return true;
-                }
-                
-                return randomTeleport((Player) sender);
-                
             case "setworld":
-                if (!sender.hasPermission("sumania.smp.admin")) {
-                    sendMessage(sender, "general.no-permission");
-                    return true;
-                }
-                
                 if (args.length < 2) {
                     sendMessage(sender, "general.invalid-args", Map.of("usage", "/smp setworld <world>"));
                     return true;
@@ -105,19 +67,9 @@ public class SMPCommand implements CommandExecutor, TabCompleter {
                     return true;
                 }
                 
-                if (!sender.hasPermission("sumania.smp.admin")) {
-                    sendMessage(sender, "general.no-permission");
-                    return true;
-                }
-                
                 return setWorldSpawn((Player) sender);
                 
             case "reset":
-                if (!sender.hasPermission("sumania.smp.admin")) {
-                    sendMessage(sender, "general.no-permission");
-                    return true;
-                }
-                
                 if (args.length < 2 || !args[1].equalsIgnoreCase("confirm")) {
                     sendMessage(sender, "smp.reset-confirm");
                     return true;
@@ -126,27 +78,12 @@ public class SMPCommand implements CommandExecutor, TabCompleter {
                 return resetWorld(sender);
                 
             case "info":
-                if (!sender.hasPermission("sumania.smp.info")) {
-                    sendMessage(sender, "general.no-permission");
-                    return true;
-                }
-                
                 return showInfo(sender);
                 
             case "enable":
-                if (!sender.hasPermission("sumania.smp.admin")) {
-                    sendMessage(sender, "general.no-permission");
-                    return true;
-                }
-                
                 return toggleSMP(sender, true);
                 
             case "disable":
-                if (!sender.hasPermission("sumania.smp.admin")) {
-                    sendMessage(sender, "general.no-permission");
-                    return true;
-                }
-                
                 return toggleSMP(sender, false);
                 
             default:
@@ -161,35 +98,16 @@ public class SMPCommand implements CommandExecutor, TabCompleter {
      * @return True if the command was executed successfully
      */
     private boolean showHelp(CommandSender sender) {
-        boolean isAdmin = sender.hasPermission("sumania.smp.admin");
+        sender.sendMessage(ChatColor.DARK_GRAY + "• " + ChatColor.AQUA + ChatColor.BOLD + "Sumania SMP Admin Hilfe" + ChatColor.DARK_GRAY + " •");
         
-        sender.sendMessage(ChatColor.DARK_GRAY + "• " + ChatColor.AQUA + ChatColor.BOLD + "Sumania SMP Hilfe" + ChatColor.DARK_GRAY + " •");
-        
-        if (sender.hasPermission("sumania.smp.join")) {
-            sender.sendMessage(ChatColor.AQUA + "/smp join" + ChatColor.GRAY + " - Betrete die SMP Welt");
-        }
-        
-        if (sender.hasPermission("sumania.smp.leave")) {
-            sender.sendMessage(ChatColor.AQUA + "/smp leave" + ChatColor.GRAY + " - Verlasse die SMP Welt");
-        }
-        
-        if (sender.hasPermission("sumania.smp.rtp")) {
-            sender.sendMessage(ChatColor.AQUA + "/smp rtp" + ChatColor.GRAY + " - Teleportiere an einen zufälligen Ort");
-        }
-        
-        if (sender.hasPermission("sumania.smp.info")) {
-            sender.sendMessage(ChatColor.AQUA + "/smp info" + ChatColor.GRAY + " - Zeige Informationen zur SMP Welt");
-        }
-        
-        // Admin commands
-        if (isAdmin) {
-            sender.sendMessage(ChatColor.DARK_GRAY + "• " + ChatColor.AQUA + ChatColor.BOLD + "Admin Befehle" + ChatColor.DARK_GRAY + " •");
-            sender.sendMessage(ChatColor.AQUA + "/smp setworld <world>" + ChatColor.GRAY + " - Setze die SMP Welt");
-            sender.sendMessage(ChatColor.AQUA + "/smp setworldspawn" + ChatColor.GRAY + " - Setze den Spawn der SMP Welt");
-            sender.sendMessage(ChatColor.AQUA + "/smp reset confirm" + ChatColor.GRAY + " - Setze die SMP Welt zurück");
-            sender.sendMessage(ChatColor.AQUA + "/smp enable" + ChatColor.GRAY + " - Aktiviere das SMP System");
-            sender.sendMessage(ChatColor.AQUA + "/smp disable" + ChatColor.GRAY + " - Deaktiviere das SMP System");
-        }
+        // Only show admin commands
+        sender.sendMessage(ChatColor.AQUA + "/rtp" + ChatColor.GRAY + " - Spieler können sich an einen zufälligen Ort teleportieren");
+        sender.sendMessage(ChatColor.AQUA + "/smp info" + ChatColor.GRAY + " - Zeige Informationen zur SMP Welt");
+        sender.sendMessage(ChatColor.AQUA + "/smp setworld <world>" + ChatColor.GRAY + " - Setze die SMP Welt");
+        sender.sendMessage(ChatColor.AQUA + "/smp setworldspawn" + ChatColor.GRAY + " - Setze den Spawn der SMP Welt");
+        sender.sendMessage(ChatColor.AQUA + "/smp reset confirm" + ChatColor.GRAY + " - Setze die SMP Welt zurück");
+        sender.sendMessage(ChatColor.AQUA + "/smp enable" + ChatColor.GRAY + " - Aktiviere das SMP System");
+        sender.sendMessage(ChatColor.AQUA + "/smp disable" + ChatColor.GRAY + " - Deaktiviere das SMP System");
         
         return true;
     }
@@ -479,41 +397,32 @@ public class SMPCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        // Only offer tab completion for admin users
+        if (!sender.hasPermission("sumania.smp.admin")) {
+            return new ArrayList<>();
+        }
+        
         if (args.length == 1) {
             List<String> completions = new ArrayList<>();
             
-            // Basic commands for everyone
+            // Admin commands only
             completions.add("help");
-            
-            // Player commands
-            if (sender instanceof Player) {
-                if (sender.hasPermission("sumania.smp.join")) completions.add("join");
-                if (sender.hasPermission("sumania.smp.leave")) completions.add("leave");
-                if (sender.hasPermission("sumania.smp.rtp")) {
-                    completions.add("rtp");
-                    completions.add("randomtp");
-                }
-                if (sender.hasPermission("sumania.smp.info")) completions.add("info");
-            }
-            
-            // Admin commands
-            if (sender.hasPermission("sumania.smp.admin")) {
-                completions.add("setworld");
-                completions.add("setworldspawn");
-                completions.add("reset");
-                completions.add("enable");
-                completions.add("disable");
-            }
+            completions.add("info");
+            completions.add("setworld");
+            completions.add("setworldspawn");
+            completions.add("reset");
+            completions.add("enable");
+            completions.add("disable");
             
             return completions.stream()
                     .filter(s -> s.toLowerCase().startsWith(args[0].toLowerCase()))
                     .collect(Collectors.toList());
         } else if (args.length == 2) {
-            if (args[0].equalsIgnoreCase("setworld") && sender.hasPermission("sumania.smp.admin")) {
+            if (args[0].equalsIgnoreCase("setworld")) {
                 return plugin.getAPI().getSMPWorldAPI().getAvailableWorlds().stream()
                         .filter(s -> s.toLowerCase().startsWith(args[1].toLowerCase()))
                         .collect(Collectors.toList());
-            } else if (args[0].equalsIgnoreCase("reset") && sender.hasPermission("sumania.smp.admin")) {
+            } else if (args[0].equalsIgnoreCase("reset")) {
                 return Arrays.asList("confirm").stream()
                         .filter(s -> s.toLowerCase().startsWith(args[1].toLowerCase()))
                         .collect(Collectors.toList());

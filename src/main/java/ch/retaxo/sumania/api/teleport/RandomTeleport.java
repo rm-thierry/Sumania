@@ -134,8 +134,13 @@ public class RandomTeleport {
      * @param player The player
      */
     private void setCooldown(Player player) {
+        // Check for bypass permission
+        if (player.hasPermission("sumania.rtp.bypass.cooldown")) {
+            return;
+        }
+        
         FileConfiguration config = plugin.getConfigManager().getConfig("config.yml");
-        int cooldown = config.getInt("smp.rtp-cooldown", 300); // Default 5 minutes
+        int cooldown = config.getInt("smp.rtp-cooldown", 60); // Default 1 minute
         
         if (cooldown > 0) {
             randomTpCooldowns.put(player.getUniqueId(), System.currentTimeMillis() + (cooldown * 1000L));
@@ -179,10 +184,13 @@ public class RandomTeleport {
         int minRange = config.getInt("smp.min-teleport-range", 1000);
         int maxRange = config.getInt("smp.max-teleport-range", 10000);
         
+        // Set cooldown immediately to prevent spam
+        setCooldown(player);
+        
         // Notify player
         plugin.getAPI().getPlayerAPI().sendMessage(
                 player,
-                "smp.searching-location",
+                "smp.rtp-success",
                 null
         );
         
@@ -216,14 +224,6 @@ public class RandomTeleport {
                             if (isSafeLocation(location)) {
                                 // Teleport the player
                                 plugin.getAPI().getTeleportAPI().teleport(player, location);
-                                plugin.getAPI().getPlayerAPI().sendMessage(
-                                        player,
-                                        "smp.teleported",
-                                        null
-                                );
-                                
-                                // Set cooldown
-                                setCooldown(player);
                                 
                                 // Complete future
                                 future.complete(true);

@@ -139,6 +139,12 @@ commands:
     aliases: [randomtp, randomteleport]
     permission: sumania.rtp
     
+  # SMP command
+  smp:
+    description: SMP-Weltmanagement (nur für Administratoren)
+    usage: /smp [help|reset|setworld|setworldspawn|enable|disable]
+    permission: sumania.smp.admin
+    
   # Ban commands
   ban:
     description: Spieler permanent bannen
@@ -294,6 +300,9 @@ permissions:
   sumania.rtp:
     description: Erlaubt die Verwendung des Random-Teleports
     default: true
+  sumania.rtp.bypass.cooldown:
+    description: Erlaubt das Umgehen der Abklingzeit beim Random-Teleport
+    default: op
   sumania.smp.admin:
     description: Erlaubt das Verwalten der SMP-Welt
     default: op

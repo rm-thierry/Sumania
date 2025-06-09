@@ -68,6 +68,16 @@ public class RTPCommand implements CommandExecutor {
             return true;
         }
         
+        // Check cooldown first
+        RandomTeleport randomTp = plugin.getAPI().getRandomTeleport();
+        if (randomTp.isInCooldown(player)) {
+            Map<String, String> replacements = new HashMap<>();
+            replacements.put("seconds", String.valueOf(randomTp.getCooldownTimeLeft(player)));
+            
+            sendMessage(player, "smp.rtp-cooldown", replacements);
+            return true;
+        }
+        
         // If player is not in the SMP world, teleport them first
         if (!player.getWorld().getName().equals(worldName)) {
             // Check if spawn is configured
@@ -84,20 +94,6 @@ public class RTPCommand implements CommandExecutor {
                 sendMessage(player, "smp.teleport-failed");
                 return true;
             }
-            
-            sendMessage(player, "smp.teleported-to-smp");
-        }
-        
-        // Get the RandomTeleport instance
-        RandomTeleport randomTp = plugin.getAPI().getRandomTeleport();
-        
-        // Check cooldown
-        if (randomTp.isInCooldown(player)) {
-            Map<String, String> replacements = new HashMap<>();
-            replacements.put("seconds", String.valueOf(randomTp.getCooldownTimeLeft(player)));
-            
-            sendMessage(player, "smp.rtp-cooldown", replacements);
-            return true;
         }
         
         // Perform random teleport
