@@ -45,7 +45,6 @@ public class ChatAPI {
         // Replace basic placeholders
         format = format.replace("%player%", player.getName());
         format = format.replace("%message%", message);
-        format = format.replace("%rank%", "Player"); // TODO: Implement rank system
         
         // Process other placeholders
         format = plugin.getAPI().getPlayerAPI().processPlaceholders(player, format);

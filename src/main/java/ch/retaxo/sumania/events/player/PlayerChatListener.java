@@ -6,6 +6,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.PlayerChatEvent;
 
 /**
  * Listener for player chat events
@@ -27,19 +28,13 @@ public class PlayerChatListener implements Listener {
      * @param event The event
      */
     @EventHandler(priority = EventPriority.HIGHEST)
-    public void onPlayerChat(AsyncPlayerChatEvent event) {
+    public void onPlayerChat(PlayerChatEvent event) {
         Player player = event.getPlayer();
         
         // Check if player can chat
         if (!plugin.getAPI().getChatAPI().canChat(player)) {
             event.setCancelled(true);
             return;
-        }
-        
-        // Format message if enabled
-        if (plugin.getConfigManager().getConfig("config.yml").getBoolean("chat.format-enabled", true)) {
-            String message = plugin.getAPI().getChatAPI().formatMessage(player, event.getMessage());
-            event.setFormat(message);
         }
         
         // Set chat cooldown

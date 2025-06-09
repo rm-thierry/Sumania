@@ -210,34 +210,55 @@ public class BanCommand implements CommandExecutor, TabCompleter {
      * Send fancy lookup information with hover and click effects
      */
     private void sendFancyLookup(Player player, OfflinePlayer target) {
+        String prefix = plugin.getConfigManager().getPrefix();
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
-        
-        // Basic info section
-        TextComponent uuidComponent = new TextComponent("§7UUID: §f" + target.getUniqueId());
-        uuidComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, 
-            new Text("§7Click to copy UUID to clipboard")));
-        uuidComponent.setClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, 
-            target.getUniqueId().toString()));
+
+        // Basic Info Section
+        sendBasicInfo(player, target, prefix);
+
+        // Online Status Section
+        sendOnlineStatus(player, target, prefix, dateFormat);
+
+        // Ban Status Section
+        sendBanStatus(player, target, prefix, dateFormat);
+
+        // Stats Section
+        sendStats(player, target, prefix);
+
+        // Economy Section
+        sendEconomy(player, target, prefix);
+
+        // Homes Section
+        sendHomes(player, target, prefix);
+    }
+
+    private void sendBasicInfo(Player player, OfflinePlayer target, String prefix) {
+        TextComponent uuidComponent = new TextComponent(prefix + "§7UUID: §f" + target.getUniqueId());
+        uuidComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                new Text("§7Click to copy UUID to clipboard")));
+        uuidComponent.setClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD,
+                target.getUniqueId().toString()));
         player.spigot().sendMessage(uuidComponent);
-        
-        // Online status with last seen if offline
-        TextComponent onlineComponent = new TextComponent("§7Online: §f" + (target.isOnline() ? "§aYes" : "§cNo"));
+    }
+
+    private void sendOnlineStatus(Player player, OfflinePlayer target, String prefix, SimpleDateFormat dateFormat) {
+        TextComponent onlineComponent = new TextComponent(prefix + "§7Online: §f" + (target.isOnline() ? "§aYes" : "§cNo"));
         if (!target.isOnline() && target.getLastPlayed() > 0) {
-            onlineComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, 
-                new Text("§7Last seen: §f" + dateFormat.format(new Date(target.getLastPlayed())))));
+            onlineComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                    new Text("§7Last seen: §f" + dateFormat.format(new Date(target.getLastPlayed())))));
         }
         player.spigot().sendMessage(onlineComponent);
-        
-        // Ban status section with hover details
+    }
+
+    private void sendBanStatus(Player player, OfflinePlayer target, String prefix, SimpleDateFormat dateFormat) {
         boolean isBanned = plugin.getAPI().getPlayerAPI().isBanned(target);
-        TextComponent banComponent = new TextComponent(isBanned ? 
-            "§7Ban Status: §c§lBANNED" : "§7Ban Status: §aNot Banned");
-        
+        TextComponent banComponent = new TextComponent(prefix + (isBanned ?
+                "§7Ban Status: §c§lBANNED" : "§7Ban Status: §aNot Banned"));
+
         if (isBanned) {
             String reason = plugin.getAPI().getPlayerAPI().getBanReason(target);
             long expiration = plugin.getAPI().getPlayerAPI().getBanExpiration(target);
-            
-            // Try to get admin and ban time from database (more reliable than before)
+
             String admin = "Unknown";
             long banTime = 0;
             List<Map<String, Object>> banHistory = plugin.getAPI().getPlayerAPI().getBanHistory(target);
@@ -246,68 +267,68 @@ public class BanCommand implements CommandExecutor, TabCompleter {
                 admin = (String) latestBan.get("admin");
                 banTime = (long) latestBan.get("time");
             }
-            
+
             StringBuilder hoverText = new StringBuilder();
             hoverText.append("§cReason: §f").append(reason).append("\n");
             hoverText.append("§cBanned by: §f").append(admin).append("\n");
             hoverText.append("§cBanned on: §f").append(dateFormat.format(new Date(banTime))).append("\n");
-            
+
             if (expiration > 0) {
                 hoverText.append("§cExpires: §f").append(dateFormat.format(new Date(expiration))).append("\n");
                 hoverText.append("§cTime left: §f").append(plugin.getAPI().getPlayerAPI().formatDuration(expiration - System.currentTimeMillis()));
             } else {
                 hoverText.append("§cExpires: §4NEVER");
             }
-            
+
             banComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text(hoverText.toString())));
             banComponent.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/banhistory " + target.getName()));
             player.spigot().sendMessage(banComponent);
-            
-            // Basic ban info without hover
-            player.sendMessage("§7Reason: §f" + reason);
-            
+
+            player.sendMessage(prefix + "§7Reason: §f" + reason);
             if (expiration > 0) {
-                player.sendMessage("§7Expires: §f" + dateFormat.format(new Date(expiration)));
-                player.sendMessage("§7Time left: §f" + plugin.getAPI().getPlayerAPI().formatDuration(expiration - System.currentTimeMillis()));
+                player.sendMessage(prefix + "§7Expires: §f" + dateFormat.format(new Date(expiration)));
+                player.sendMessage(prefix + "§7Time left: §f" + plugin.getAPI().getPlayerAPI().formatDuration(expiration - System.currentTimeMillis()));
             } else {
-                player.sendMessage("§7Expires: §4NEVER");
+                player.sendMessage(prefix + "§7Expires: §4NEVER");
             }
         } else {
-            banComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, 
-                new Text("§7Click to view ban history")));
-            banComponent.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, 
-                "/banhistory " + target.getName()));
+            banComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                    new Text("§7Click to view ban history")));
+            banComponent.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,
+                    "/banhistory " + target.getName()));
             player.spigot().sendMessage(banComponent);
         }
+    }
 
-        
-        // Stats section with hover details
+    private void sendStats(Player player, OfflinePlayer target, String prefix) {
         int kills = plugin.getAPI().getPlayerAPI().getKills(target);
         int deaths = plugin.getAPI().getPlayerAPI().getDeaths(target);
         float kdr = deaths > 0 ? (float) kills / deaths : kills;
-        
-        TextComponent statsComponent = new TextComponent("§7Stats: §fKills: " + kills + " §7/ §fDeaths: " + deaths);
-        statsComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, 
-            new Text("§7K/D Ratio: §f" + String.format("%.2f", kdr))));
+
+        TextComponent statsComponent = new TextComponent(prefix + "§7Stats: §fKills: " + kills + " §7/ §fDeaths: " + deaths);
+        statsComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                new Text("§7K/D Ratio: §f" + String.format("%.2f", kdr))));
         player.spigot().sendMessage(statsComponent);
-        
-        // Economy section with hover
+    }
+
+    private void sendEconomy(Player player, OfflinePlayer target, String prefix) {
         double balance = plugin.getAPI().getEconomyAPI().getBalance(target);
         String formatted = plugin.getAPI().getEconomyAPI().format(balance);
-        
-        TextComponent economyComponent = new TextComponent("§7Balance: §f" + formatted);
+
+        TextComponent economyComponent = new TextComponent(prefix + "§7Balance: §f" + formatted);
         if (player.hasPermission("sumania.economy.admin")) {
-            economyComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, 
-                new Text("§7Click to manage balance")));
-            economyComponent.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, 
-                "/eco give " + target.getName() + " "));
+            economyComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                    new Text("§7Click to manage balance")));
+            economyComponent.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND,
+                    "/eco give " + target.getName() + " "));
         }
         player.spigot().sendMessage(economyComponent);
-        
-        // Homes section with hover to list homes
+    }
+
+    private void sendHomes(Player player, OfflinePlayer target, String prefix) {
         Map<String, Home> homes = plugin.getAPI().getPlayerAPI().getHomes(target);
-        TextComponent homesComponent = new TextComponent("§7Homes: §f" + homes.size());
-        
+        TextComponent homesComponent = new TextComponent(prefix + "§7Homes: §f" + homes.size());
+
         if (!homes.isEmpty()) {
             StringBuilder homesList = new StringBuilder("§7Homes: \n");
             for (String homeName : homes.keySet()) {
@@ -318,15 +339,12 @@ public class BanCommand implements CommandExecutor, TabCompleter {
                         .append((int) home.getLocation().getY()).append(", ")
                         .append((int) home.getLocation().getZ()).append(")\n");
             }
-            homesComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, 
-                new Text(homesList.toString())));
+            homesComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                    new Text(homesList.toString())));
         }
         player.spigot().sendMessage(homesComponent);
     }
-    
-    /**
-     * Send plain lookup information (for console)
-     */
+
     private void sendPlainLookup(CommandSender sender, OfflinePlayer target) {
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
         
@@ -376,7 +394,6 @@ public class BanCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage("§7Kills: §f" + kills);
         sender.sendMessage("§7Deaths: §f" + deaths);
         sender.sendMessage("§7K/D Ratio: §f" + String.format("%.2f", kdr));
-        sender.sendMessage("§8-----------------------------------");
         
         // Player economy
         double balance = plugin.getAPI().getEconomyAPI().getBalance(target);
@@ -398,6 +415,7 @@ public class BanCommand implements CommandExecutor, TabCompleter {
                         (int) home.getLocation().getZ() + ")");
             }
         }
+        sender.sendMessage("§8-----------------------------------");
     }
 
     
