@@ -69,14 +69,19 @@ public class TeleportAPI {
             return false;
         }
         
-        // Get teleport delay
-        int delay = config.getInt("teleportation.delay", 5);
+        // Get teleport delay - for RTP we'll override this to be instant
+        int delay = 0;
+        // Only use configured delay for non-RTP teleports (check the stack trace)
+        boolean isRandomTeleport = Thread.currentThread().getStackTrace()[2].getClassName().contains("RandomTeleport");
+        if (!isRandomTeleport) {
+            delay = config.getInt("teleportation.delay", 5);
+        }
         
         // Store player's last location for movement check
         lastLocations.put(player.getUniqueId(), player.getLocation());
         
-        // Send teleporting message if delay > 0
-        if (delay > 0) {
+        // Send teleporting message if delay > 0 and it's not a random teleport
+        if (delay > 0 && !isRandomTeleport) {
             Map<String, String> replacements = new HashMap<>();
             replacements.put("seconds", String.valueOf(delay));
             
@@ -96,14 +101,16 @@ public class TeleportAPI {
         BukkitTask task = new BukkitRunnable() {
             @Override
             public void run() {
-
                 player.teleport(location);
-                // Send success message
-                plugin.getAPI().getPlayerAPI().sendMessage(
-                        player,
-                        "teleport.teleport-success",
-                        null
-                );
+                
+                // Send success message only for non-RTP teleports
+                if (!isRandomTeleport) {
+                    plugin.getAPI().getPlayerAPI().sendMessage(
+                            player,
+                            "teleport.teleport-success",
+                            null
+                    );
+                }
                 
                 // Set cooldown
                 setCooldown(player);

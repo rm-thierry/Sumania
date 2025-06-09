@@ -78,27 +78,12 @@ public class RTPCommand implements CommandExecutor {
             return true;
         }
         
-        // If player is not in the SMP world, teleport them first
-        if (!player.getWorld().getName().equals(worldName)) {
-            // Check if spawn is configured
-            double spawnX = config.getDouble("smp.spawn.x", 0.0);
-            double spawnY = config.getDouble("smp.spawn.y", 64.0);
-            double spawnZ = config.getDouble("smp.spawn.z", 0.0);
-            float spawnYaw = (float) config.getDouble("smp.spawn.yaw", 0.0);
-            float spawnPitch = (float) config.getDouble("smp.spawn.pitch", 0.0);
-            
-            Location spawnLoc = new Location(world, spawnX, spawnY, spawnZ, spawnYaw, spawnPitch);
-            boolean success = plugin.getAPI().getTeleportAPI().teleport(player, spawnLoc);
-            
-            if (!success) {
-                sendMessage(player, "smp.teleport-failed");
-                return true;
-            }
-        }
+        // No need to teleport to spawn first, we'll teleport directly to a random location
         
-        // Perform random teleport
+        // Perform random teleport silently
         randomTp.randomTeleport(player)
             .thenAccept(success -> {
+                // Only notify on failure
                 if (!success) {
                     sendMessage(player, "smp.rtp-failed");
                 }

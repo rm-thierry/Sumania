@@ -187,12 +187,7 @@ public class RandomTeleport {
         // Set cooldown immediately to prevent spam
         setCooldown(player);
         
-        // Notify player
-        plugin.getAPI().getPlayerAPI().sendMessage(
-                player,
-                "smp.rtp-success",
-                null
-        );
+        // No notification, just teleport silently
         
         // Start async task to find a safe location
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
@@ -222,7 +217,7 @@ public class RandomTeleport {
                             
                             // Check again on the main thread for block safety
                             if (isSafeLocation(location)) {
-                                // Teleport the player
+                                // Teleport the player directly to random location regardless of current world
                                 plugin.getAPI().getTeleportAPI().teleport(player, location);
                                 
                                 // Complete future
