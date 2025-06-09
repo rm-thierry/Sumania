@@ -96,22 +96,8 @@ public class TeleportAPI {
         BukkitTask task = new BukkitRunnable() {
             @Override
             public void run() {
-                // Check if player has moved
-                if (delay > 0 && hasPlayerMoved(player)) {
-                    plugin.getAPI().getPlayerAPI().sendMessage(
-                            player,
-                            "teleport.teleport-cancelled",
-                            null
-                    );
-                    
-                    teleportTasks.remove(player.getUniqueId());
-                    lastLocations.remove(player.getUniqueId());
-                    return;
-                }
-                
-                // Teleport player
+
                 player.teleport(location);
-                
                 // Send success message
                 plugin.getAPI().getPlayerAPI().sendMessage(
                         player,
@@ -133,25 +119,7 @@ public class TeleportAPI {
         
         return true;
     }
-    
-    /**
-     * Check if a player has moved since teleport was initiated
-     * @param player The player to check
-     * @return True if the player has moved
-     */
-    private boolean hasPlayerMoved(Player player) {
-        if (!lastLocations.containsKey(player.getUniqueId())) {
-            return false;
-        }
-        
-        Location last = lastLocations.get(player.getUniqueId());
-        Location current = player.getLocation();
-        
-        return last.getWorld() != current.getWorld()
-                || last.getBlockX() != current.getBlockX()
-                || last.getBlockY() != current.getBlockY()
-                || last.getBlockZ() != current.getBlockZ();
-    }
+
     
     /**
      * Set a teleport cooldown for a player
