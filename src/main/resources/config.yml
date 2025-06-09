@@ -1,7 +1,7 @@
 # Sumania Konfigurationsdatei
 
 # Präfix für alle Nachrichten
-prefix: "§8[§6Sumania§8] §7"
+prefix: "§8[§bSumania§8] §7"
 
 # Debug-Modus aktivieren
 debug-mode: false
@@ -120,7 +120,7 @@ chat:
   # Chat-Formatierung aktivieren
   format-enabled: true
   # Chat-Format
-  format: "§8[§6%rank%§8] §7%player% §8» §f%message%"
+  format: "§8[§b%rank%§8] §7%player% §8» §f%message%"
   # Chat-Reichweite (Blöcke, 0 für global)
   range: 0
   

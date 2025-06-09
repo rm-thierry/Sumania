@@ -70,7 +70,7 @@ public class ReloadCommand implements CommandExecutor {
      * @param sender The command sender
      */
     private void sendHelp(CommandSender sender) {
-        sender.sendMessage("§8===== §6Sumania §8=====");
-        sender.sendMessage("§6/sumania reload §7- Reload the plugin");
+        sender.sendMessage("§8• §b§lSumania §8•");
+        sender.sendMessage("§b/sumania reload §7- Reload the plugin");
     }
 }

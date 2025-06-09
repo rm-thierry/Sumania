@@ -100,15 +100,15 @@ public class ChatCommand implements CommandExecutor {
     private void sendHelp(CommandSender sender) {
         String prefix = plugin.getConfigManager().getPrefix();
         
-        sender.sendMessage(prefix + "§8===== §6Sumania Chat §8=====");
+        sender.sendMessage(prefix + "§8• §b§lSumania Chat §8•");
         
         if (sender.hasPermission("sumania.chat.mute")) {
-            sender.sendMessage(prefix + "§6/chat mute §7- Chat stummschalten");
-            sender.sendMessage(prefix + "§6/chat unmute §7- Chat aktivieren");
+            sender.sendMessage(prefix + "§b/chat mute §7- Chat stummschalten");
+            sender.sendMessage(prefix + "§b/chat unmute §7- Chat aktivieren");
         }
         
         if (sender.hasPermission("sumania.chat.clear")) {
-            sender.sendMessage(prefix + "§6/chat clear §7- Chat löschen");
+            sender.sendMessage(prefix + "§b/chat clear §7- Chat löschen");
         }
     }
 }

@@ -163,32 +163,32 @@ public class SMPCommand implements CommandExecutor, TabCompleter {
     private boolean showHelp(CommandSender sender) {
         boolean isAdmin = sender.hasPermission("sumania.smp.admin");
         
-        sender.sendMessage(ChatColor.GOLD + "=== Sumania SMP Hilfe ===");
+        sender.sendMessage(ChatColor.DARK_GRAY + "• " + ChatColor.AQUA + ChatColor.BOLD + "Sumania SMP Hilfe" + ChatColor.DARK_GRAY + " •");
         
         if (sender.hasPermission("sumania.smp.join")) {
-            sender.sendMessage(ChatColor.YELLOW + "/smp join" + ChatColor.GRAY + " - Betrete die SMP Welt");
+            sender.sendMessage(ChatColor.AQUA + "/smp join" + ChatColor.GRAY + " - Betrete die SMP Welt");
         }
         
         if (sender.hasPermission("sumania.smp.leave")) {
-            sender.sendMessage(ChatColor.YELLOW + "/smp leave" + ChatColor.GRAY + " - Verlasse die SMP Welt");
+            sender.sendMessage(ChatColor.AQUA + "/smp leave" + ChatColor.GRAY + " - Verlasse die SMP Welt");
         }
         
         if (sender.hasPermission("sumania.smp.rtp")) {
-            sender.sendMessage(ChatColor.YELLOW + "/smp rtp" + ChatColor.GRAY + " - Teleportiere an einen zufälligen Ort");
+            sender.sendMessage(ChatColor.AQUA + "/smp rtp" + ChatColor.GRAY + " - Teleportiere an einen zufälligen Ort");
         }
         
         if (sender.hasPermission("sumania.smp.info")) {
-            sender.sendMessage(ChatColor.YELLOW + "/smp info" + ChatColor.GRAY + " - Zeige Informationen zur SMP Welt");
+            sender.sendMessage(ChatColor.AQUA + "/smp info" + ChatColor.GRAY + " - Zeige Informationen zur SMP Welt");
         }
         
         // Admin commands
         if (isAdmin) {
-            sender.sendMessage(ChatColor.GOLD + "=== Admin Befehle ===");
-            sender.sendMessage(ChatColor.YELLOW + "/smp setworld <world>" + ChatColor.GRAY + " - Setze die SMP Welt");
-            sender.sendMessage(ChatColor.YELLOW + "/smp setworldspawn" + ChatColor.GRAY + " - Setze den Spawn der SMP Welt");
-            sender.sendMessage(ChatColor.YELLOW + "/smp reset confirm" + ChatColor.GRAY + " - Setze die SMP Welt zurück");
-            sender.sendMessage(ChatColor.YELLOW + "/smp enable" + ChatColor.GRAY + " - Aktiviere das SMP System");
-            sender.sendMessage(ChatColor.YELLOW + "/smp disable" + ChatColor.GRAY + " - Deaktiviere das SMP System");
+            sender.sendMessage(ChatColor.DARK_GRAY + "• " + ChatColor.AQUA + ChatColor.BOLD + "Admin Befehle" + ChatColor.DARK_GRAY + " •");
+            sender.sendMessage(ChatColor.AQUA + "/smp setworld <world>" + ChatColor.GRAY + " - Setze die SMP Welt");
+            sender.sendMessage(ChatColor.AQUA + "/smp setworldspawn" + ChatColor.GRAY + " - Setze den Spawn der SMP Welt");
+            sender.sendMessage(ChatColor.AQUA + "/smp reset confirm" + ChatColor.GRAY + " - Setze die SMP Welt zurück");
+            sender.sendMessage(ChatColor.AQUA + "/smp enable" + ChatColor.GRAY + " - Aktiviere das SMP System");
+            sender.sendMessage(ChatColor.AQUA + "/smp disable" + ChatColor.GRAY + " - Deaktiviere das SMP System");
         }
         
         return true;
@@ -406,18 +406,18 @@ public class SMPCommand implements CommandExecutor, TabCompleter {
             return true;
         }
         
-        sender.sendMessage(ChatColor.GOLD + "=== Sumania SMP Info ===");
-        sender.sendMessage(ChatColor.YELLOW + "Welt: " + ChatColor.WHITE + smpWorld.getWorldName());
+        sender.sendMessage(ChatColor.DARK_GRAY + "• " + ChatColor.AQUA + ChatColor.BOLD + "Sumania SMP Info" + ChatColor.DARK_GRAY + " •");
+        sender.sendMessage(ChatColor.AQUA + "Welt: " + ChatColor.WHITE + smpWorld.getWorldName());
         
         if (smpWorld.exists()) {
             World world = smpWorld.getWorld();
-            sender.sendMessage(ChatColor.YELLOW + "Status: " + ChatColor.GREEN + "Geladen");
-            sender.sendMessage(ChatColor.YELLOW + "Spieler: " + ChatColor.WHITE + world.getPlayers().size());
-            sender.sendMessage(ChatColor.YELLOW + "Umgebung: " + ChatColor.WHITE + world.getEnvironment().name());
-            sender.sendMessage(ChatColor.YELLOW + "Border: " + ChatColor.WHITE + smpWorld.getBorderSize() + " Blöcke");
+            sender.sendMessage(ChatColor.AQUA + "Status: " + ChatColor.GREEN + "Geladen");
+            sender.sendMessage(ChatColor.AQUA + "Spieler: " + ChatColor.WHITE + world.getPlayers().size());
+            sender.sendMessage(ChatColor.AQUA + "Umgebung: " + ChatColor.WHITE + world.getEnvironment().name());
+            sender.sendMessage(ChatColor.AQUA + "Border: " + ChatColor.WHITE + smpWorld.getBorderSize() + " Blöcke");
             
             if (smpWorld.getSpawnPoint() != null) {
-                sender.sendMessage(ChatColor.YELLOW + "Spawn: " + ChatColor.WHITE + 
+                sender.sendMessage(ChatColor.AQUA + "Spawn: " + ChatColor.WHITE + 
                     String.format("%.1f, %.1f, %.1f", 
                         smpWorld.getSpawnPoint().getX(),
                         smpWorld.getSpawnPoint().getY(),
@@ -425,7 +425,7 @@ public class SMPCommand implements CommandExecutor, TabCompleter {
                 );
             }
         } else {
-            sender.sendMessage(ChatColor.YELLOW + "Status: " + ChatColor.RED + "Nicht geladen");
+            sender.sendMessage(ChatColor.AQUA + "Status: " + ChatColor.RED + "Nicht geladen");
         }
         
         return true;

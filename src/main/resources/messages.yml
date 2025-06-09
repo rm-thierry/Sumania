@@ -19,7 +19,7 @@ economy:
   
 # Teleportation messages
 teleport:
-  teleporting: "&aTeleportiere in %seconds% Sekunden. Bewege dich nicht!"
+  teleporting: "&aTeleportiere in %seconds% Sekunden."
   teleport-cancelled: "&cTeleportation abgebrochen durch Bewegung."
   teleport-success: "&aDu wurdest teleportiert."
   teleport-request-sent: "&aTeleportanfrage an %player% gesendet."
