@@ -7,6 +7,7 @@ general:
   invalid-args: "&cUngültige Argumente. Verwendung: %usage%"
   player-not-found: "&cSpieler %player% wurde nicht gefunden."
   reload-success: "&aAlle Konfigurationsdateien wurden neu geladen."
+  feature-disabled: "&cDiese Funktion ist derzeit deaktiviert."
   
 # Economy messages
 economy:
@@ -119,3 +120,34 @@ rewards:
   already-claimed-weekly: "&cDu hast deine wöchentliche Belohnung bereits abgeholt. Nächste Belohnung in &6%time%&c."
   already-claimed-monthly: "&cDu hast deine monatliche Belohnung bereits abgeholt. Nächste Belohnung in &6%time%&c."
   streak-bonus: "&aDu hast einen &6%days%-Tage-Streak &aund erhältst einen Bonus von &6%bonus% %currency%&a!"
+  
+# SMP System
+smp:
+  # General SMP messages
+  enabled: "&aDas SMP-System wurde aktiviert."
+  disabled: "&cDas SMP-System wurde deaktiviert."
+  no-world: "&cEs ist keine SMP-Welt konfiguriert."
+  world-not-found: "&cDie Welt &e%world% &cwurde nicht gefunden."
+  world-set: "&aDie SMP-Welt wurde auf &e%world% &agesetzt."
+  world-set-failed: "&cDie SMP-Welt konnte nicht auf &e%world% &cgesetzt werden."
+  spawn-set: "&aDer SMP-Weltspawn wurde an deiner Position gesetzt."
+  spawn-set-failed: "&cDer SMP-Weltspawn konnte nicht gesetzt werden."
+  resetting: "&aDie SMP-Welt wird zurückgesetzt. Dies kann einige Zeit dauern..."
+  reset-success: "&aDie SMP-Welt wurde erfolgreich zurückgesetzt."
+  reset-failed: "&cDie SMP-Welt konnte nicht zurückgesetzt werden."
+  reset-confirm: "&cAchtung! Dies wird die SMP-Welt komplett löschen und neu erstellen. Alle Spielerdaten in dieser Welt gehen verloren! Bestätige mit &e/smp reset confirm&c."
+  
+  # Player-related SMP messages
+  joined: "&aDu hast die SMP-Welt betreten."
+  left: "&aDu hast die SMP-Welt verlassen."
+  already-in-world: "&cDu bist bereits in der SMP-Welt."
+  not-in-world: "&cDu bist nicht in der SMP-Welt."
+  join-failed: "&cBeitritt zur SMP-Welt fehlgeschlagen."
+  leave-failed: "&cVerlassen der SMP-Welt fehlgeschlagen."
+  
+  # Random teleport messages
+  searching-location: "&aSuche nach einem sicheren Ort zum Teleportieren..."
+  rtp-cooldown: "&cDu musst noch &e%seconds% &cSekunden warten, bevor du dich wieder zufällig teleportieren kannst."
+  rtp-success: "&aDu wurdest zu einem zufälligen Ort teleportiert."
+  rtp-failed: "&cZufällige Teleportation fehlgeschlagen. Bitte versuche es später erneut."
+  no-safe-location: "&cEs konnte kein sicherer Ort zum Teleportieren gefunden werden. Bitte versuche es später erneut."

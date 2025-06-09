@@ -71,6 +71,41 @@ teleportation:
   # Warp-Menü-Reihen (1-6)
   warp-menu-rows: 3
   
+# SMP-Einstellungen
+smp:
+  # SMP-System aktivieren
+  enabled: true
+  # SMP-Weltname
+  world-name: "world"
+  # Weltgrenze Größe (Durchmesser in Blöcken)
+  border-size: 10000
+  # Random Teleport Mindestabstand vom Spawn (in Blöcken)
+  min-teleport-range: 1000
+  # Random Teleport Maximalabstand vom Spawn (in Blöcken)
+  max-teleport-range: 8000
+  # Random Teleport Abklingzeit (in Sekunden)
+  rtp-cooldown: 300
+  # Spawn-Koordinaten (werden automatisch gesetzt)
+  spawn:
+    x: 0.0
+    y: 64.0
+    z: 0.0
+    yaw: 0.0
+    pitch: 0.0
+  # Standard-Spielmodus in der SMP-Welt
+  default-game-mode: "SURVIVAL"
+  # Spielregeln
+  game-rules:
+    keep-inventory: true
+    immediate-respawn: false
+    announce-advancements: true
+    do-insomnia: true
+    do-patrol-spawning: true
+    do-trader-spawning: true
+    mob-griefing: true
+    show-death-messages: true
+    random-tick-speed: 3
+  
 # Schutzeinstellungen
 protection:
   # Claim-System aktivieren

@@ -9,6 +9,7 @@ import ch.retaxo.sumania.commands.economy.BalanceCommand;
 import ch.retaxo.sumania.commands.economy.PayCommand;
 import ch.retaxo.sumania.commands.rewards.RewardsCommand;
 import ch.retaxo.sumania.commands.shop.ShopCommand;
+import ch.retaxo.sumania.commands.smp.SMPCommand;
 import ch.retaxo.sumania.commands.teleport.HomeCommand;
 import ch.retaxo.sumania.commands.teleport.TeleportCommand;
 import ch.retaxo.sumania.commands.teleport.WarpCommand;
@@ -92,6 +93,17 @@ public class CommandManager {
         // Register rewards commands if enabled
         if (config.getBoolean("commands.rewards", true)) {
             registerCommand("rewards", new RewardsCommand(plugin));
+        }
+        
+        // Register SMP commands if enabled
+        if (config.getBoolean("smp.enabled", true)) {
+            SMPCommand smpCommand = new SMPCommand(plugin);
+            registerCommand("smp", smpCommand);
+            
+            // Set tab completer for SMP command
+            if (plugin.getCommand("smp") != null) {
+                plugin.getCommand("smp").setTabCompleter(smpCommand);
+            }
         }
         
         // Register ban commands if enabled

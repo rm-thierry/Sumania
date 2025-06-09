@@ -48,8 +48,28 @@ public final class Sumania extends JavaPlugin implements Listener {
             new SumaniaPlaceholderExpansion(this).register();
         }
         
+        // Ensure default SMP config values are set
+        ensureDefaultSMPConfig();
+        
         // Log startup
         Bukkit.getLogger().info(configManager.getPrefix() + "Plugin enabled successfully!");
+    }
+    
+    /**
+     * Ensure default SMP config values are set
+     */
+    private void ensureDefaultSMPConfig() {
+        // Ensure SMP config has default values if missing
+        if (!configManager.getConfig("config.yml").contains("smp")) {
+            configManager.getConfig("config.yml").set("smp.enabled", true);
+            configManager.getConfig("config.yml").set("smp.world-name", getServer().getWorlds().get(0).getName());
+            configManager.getConfig("config.yml").set("smp.border-size", 10000);
+            configManager.getConfig("config.yml").set("smp.min-teleport-range", 1000);
+            configManager.getConfig("config.yml").set("smp.max-teleport-range", 8000);
+            configManager.getConfig("config.yml").set("smp.rtp-cooldown", 300);
+            configManager.getConfig("config.yml").set("smp.default-game-mode", "SURVIVAL");
+            configManager.saveConfig("config.yml");
+        }
     }
     
     @Override
