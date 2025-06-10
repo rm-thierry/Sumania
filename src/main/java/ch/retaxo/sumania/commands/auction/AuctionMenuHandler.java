@@ -251,6 +251,7 @@ public class AuctionMenuHandler implements Listener {
         // Add price options
         double minPrice = plugin.getConfigManager().getConfig("config.yml").getDouble("auction.min-price", 10.0);
         
+        // Predefined price options
         ItemStack price1 = createMenuItem(Material.GOLD_NUGGET, 
                 highlightColor + "Preis: " + priceColor + priceFormat.format(minPrice) + " " + plugin.getAPI().getEconomyAPI().getCurrencyName(), 
                 Arrays.asList(
@@ -298,6 +299,18 @@ public class AuctionMenuHandler implements Listener {
         price4 = setMenuAction(price4, "set_price");
         price4 = setValue(price4, String.valueOf(minPrice * 1000));
         menu.setItem(15, price4);
+        
+        // Custom price option
+        ItemStack customPrice = createMenuItem(Material.NAME_TAG, 
+                highlightColor + "Eigenen Preis festlegen", 
+                Arrays.asList(
+                    primaryColor + "Lege einen eigenen Preis für deine Auktion fest.",
+                    primaryColor + "Min: " + priceColor + priceFormat.format(minPrice) + primaryColor + ", Max: " + priceColor + priceFormat.format(plugin.getConfigManager().getConfig("config.yml").getDouble("auction.max-price", 1000000.0)),
+                    "",
+                    secondaryColor + "» " + primaryColor + "Klicke, um einen eigenen Preis festzulegen"
+                ));
+        customPrice = setMenuAction(customPrice, "custom_price");
+        menu.setItem(16, customPrice);
         
         // Add cancel button
         ItemStack cancel = createMenuItem(cancelItem, 
@@ -1100,6 +1113,227 @@ public class AuctionMenuHandler implements Listener {
     }
     
     /**
+     * Open a custom price input menu
+     * @param player The player
+     * @param item The item to auction
+     */
+    public void openCustomPriceMenu(Player player, ItemStack item) {
+        // Create inventory
+        Inventory menu = Bukkit.createInventory(null, 3 * 9, createAuctionTitle + " - Eigener Preis");
+        
+        // Add border items
+        for (int i = 0; i < 9; i++) {
+            menu.setItem(i, createMenuItem(borderItem, " ", null));
+        }
+        for (int i = 18; i < 27; i++) {
+            menu.setItem(i, createMenuItem(borderItem, " ", null));
+        }
+        menu.setItem(9, createMenuItem(borderItem, " ", null));
+        menu.setItem(17, createMenuItem(borderItem, " ", null));
+        
+        // Add item to auction
+        menu.setItem(4, item.clone());
+        
+        // Add price input options
+        double minPrice = plugin.getConfigManager().getConfig("config.yml").getDouble("auction.min-price", 10.0);
+        double maxPrice = plugin.getConfigManager().getConfig("config.yml").getDouble("auction.max-price", 1000000.0);
+        
+        // Display current price
+        AuctionCommand auctionCommand = (AuctionCommand) plugin.getCommandManager().getCommand("ah");
+        double currentPrice = auctionCommand.getAuctionPrice(player);
+        if (currentPrice <= 0) {
+            currentPrice = minPrice;
+            auctionCommand.setAuctionPrice(player, currentPrice);
+        }
+        
+        ItemStack currentPriceItem = createMenuItem(Material.GOLD_INGOT, 
+                highlightColor + "Aktueller Preis: " + priceColor + priceFormat.format(currentPrice) + " " + plugin.getAPI().getEconomyAPI().getCurrencyName(), 
+                Arrays.asList(
+                    primaryColor + "Dies ist der aktuelle Preis für deine Auktion.",
+                    primaryColor + "Verwende die Buttons unten, um den Preis anzupassen.",
+                    "",
+                    primaryColor + "Min: " + priceColor + priceFormat.format(minPrice),
+                    primaryColor + "Max: " + priceColor + priceFormat.format(maxPrice)
+                ));
+        menu.setItem(13, currentPriceItem);
+        
+        // Add value adjustment buttons
+        ItemStack minus100 = createMenuItem(Material.RED_CONCRETE, 
+                warningColor + "-100", 
+                Arrays.asList(
+                    primaryColor + "Reduziere den Preis um 100",
+                    "",
+                    secondaryColor + "» " + primaryColor + "Klicke, um 100 abzuziehen"
+                ));
+        minus100 = setMenuAction(minus100, "adjust_price");
+        minus100 = setValue(minus100, "-100");
+        menu.setItem(10, minus100);
+        
+        ItemStack minus10 = createMenuItem(Material.RED_CONCRETE, 
+                warningColor + "-10", 
+                Arrays.asList(
+                    primaryColor + "Reduziere den Preis um 10",
+                    "",
+                    secondaryColor + "» " + primaryColor + "Klicke, um 10 abzuziehen"
+                ));
+        minus10 = setMenuAction(minus10, "adjust_price");
+        minus10 = setValue(minus10, "-10");
+        menu.setItem(11, minus10);
+        
+        ItemStack minus1 = createMenuItem(Material.RED_CONCRETE, 
+                warningColor + "-1", 
+                Arrays.asList(
+                    primaryColor + "Reduziere den Preis um 1",
+                    "",
+                    secondaryColor + "» " + primaryColor + "Klicke, um 1 abzuziehen"
+                ));
+        minus1 = setMenuAction(minus1, "adjust_price");
+        minus1 = setValue(minus1, "-1");
+        menu.setItem(12, minus1);
+        
+        ItemStack plus1 = createMenuItem(Material.LIME_CONCRETE, 
+                highlightColor + "+1", 
+                Arrays.asList(
+                    primaryColor + "Erhöhe den Preis um 1",
+                    "",
+                    secondaryColor + "» " + primaryColor + "Klicke, um 1 hinzuzufügen"
+                ));
+        plus1 = setMenuAction(plus1, "adjust_price");
+        plus1 = setValue(plus1, "1");
+        menu.setItem(14, plus1);
+        
+        ItemStack plus10 = createMenuItem(Material.LIME_CONCRETE, 
+                highlightColor + "+10", 
+                Arrays.asList(
+                    primaryColor + "Erhöhe den Preis um 10",
+                    "",
+                    secondaryColor + "» " + primaryColor + "Klicke, um 10 hinzuzufügen"
+                ));
+        plus10 = setMenuAction(plus10, "adjust_price");
+        plus10 = setValue(plus10, "10");
+        menu.setItem(15, plus10);
+        
+        ItemStack plus100 = createMenuItem(Material.LIME_CONCRETE, 
+                highlightColor + "+100", 
+                Arrays.asList(
+                    primaryColor + "Erhöhe den Preis um 100",
+                    "",
+                    secondaryColor + "» " + primaryColor + "Klicke, um 100 hinzuzufügen"
+                ));
+        plus100 = setMenuAction(plus100, "adjust_price");
+        plus100 = setValue(plus100, "100");
+        menu.setItem(16, plus100);
+        
+        // Add confirm button
+        ItemStack confirm = createMenuItem(confirmItem, 
+                highlightColor + "Bestätigen", 
+                Arrays.asList(
+                    primaryColor + "Bestätige den Preis von " + priceColor + priceFormat.format(currentPrice) + " " + plugin.getAPI().getEconomyAPI().getCurrencyName(),
+                    primaryColor + "für deine Auktion.",
+                    "",
+                    secondaryColor + "» " + primaryColor + "Klicke, um den Preis zu bestätigen"
+                ));
+        confirm = setMenuAction(confirm, "confirm_custom_price");
+        menu.setItem(21, confirm);
+        
+        // Add back button
+        ItemStack back = createMenuItem(backItem, 
+                warningColor + "Zurück", 
+                Arrays.asList(
+                    primaryColor + "Zurück zur Preisauswahl.",
+                    "",
+                    secondaryColor + "» " + primaryColor + "Klicke, um zurückzugehen"
+                ));
+        back = setMenuAction(back, "back_to_price");
+        menu.setItem(23, back);
+        
+        // Open the menu
+        player.openInventory(menu);
+    }
+    
+    /**
+     * Determine the appropriate category for an item
+     * @param item The item to categorize
+     * @return The category name
+     */
+    public String determineItemCategory(ItemStack item) {
+        Material material = item.getType();
+        String materialName = material.name().toLowerCase();
+        
+        // Weapons
+        if (materialName.contains("sword") || materialName.contains("bow") || 
+            materialName.contains("arrow") || materialName.contains("trident") || 
+            materialName.contains("crossbow")) {
+            return "weapons";
+        }
+        
+        // Tools
+        if (materialName.contains("pickaxe") || materialName.contains("axe") || 
+            materialName.contains("shovel") || materialName.contains("hoe") || 
+            materialName.contains("fishing_rod") || materialName.contains("shears")) {
+            return "tools";
+        }
+        
+        // Armor
+        if (materialName.contains("helmet") || materialName.contains("chestplate") || 
+            materialName.contains("leggings") || materialName.contains("boots") || 
+            materialName.contains("shield") || materialName.contains("elytra")) {
+            return "armor";
+        }
+        
+        // Food
+        if (material.isEdible() || materialName.contains("cake") || 
+            materialName.contains("cookie") || materialName.contains("beef") || 
+            materialName.contains("pork") || materialName.contains("chicken") || 
+            materialName.contains("fish") || materialName.contains("apple") || 
+            materialName.contains("carrot") || materialName.contains("potato")) {
+            return "food";
+        }
+        
+        // Brewing
+        if (materialName.contains("potion") || materialName.contains("brewing") || 
+            materialName.contains("blaze") || materialName.contains("spider_eye") || 
+            materialName.contains("fermented") || materialName.contains("ghast_tear") || 
+            materialName.contains("glistering_melon") || materialName.contains("golden_carrot") || 
+            materialName.contains("magma_cream") || materialName.contains("nether_wart") || 
+            materialName.contains("phantom_membrane") || materialName.contains("rabbit_foot") || 
+            materialName.contains("turtle_helmet") || materialName.contains("dragon_breath")) {
+            return "brewing";
+        }
+        
+        // Redstone
+        if (materialName.contains("redstone") || materialName.contains("comparator") || 
+            materialName.contains("repeater") || materialName.contains("observer") || 
+            materialName.contains("hopper") || materialName.contains("dropper") || 
+            materialName.contains("dispenser") || materialName.contains("piston") || 
+            materialName.contains("rail") || materialName.contains("pressure_plate") || 
+            materialName.contains("lever") || materialName.contains("button") || 
+            materialName.contains("tripwire") || materialName.contains("detector")) {
+            return "redstone";
+        }
+        
+        // Decoration
+        if (materialName.contains("flower") || materialName.contains("banner") || 
+            materialName.contains("carpet") || materialName.contains("bed") || 
+            materialName.contains("sign") || materialName.contains("frame") || 
+            materialName.contains("head") || materialName.contains("skull") || 
+            materialName.contains("painting") || materialName.contains("pot") || 
+            materialName.contains("lantern") || materialName.contains("torch") || 
+            materialName.contains("candle") || materialName.contains("glass") || 
+            materialName.contains("chandelier")) {
+            return "decoration";
+        }
+        
+        // Blocks - check if material is a block and not in another category
+        if (material.isBlock() && material.isSolid()) {
+            return "blocks";
+        }
+        
+        // Default to misc
+        return "misc";
+    }
+    
+    /**
      * Handle inventory click events
      * @param event The inventory click event
      */
@@ -1155,6 +1389,20 @@ public class AuctionMenuHandler implements Listener {
                     if (auctionId != -1) {
                         Auction auction = auctionAPI.getAuction(auctionId);
                         if (auction != null && auction.isActive()) {
+                            // Open confirmation menu before purchase
+                            openPurchaseConfirmationMenu(player, auction);
+                        } else {
+                            player.sendMessage(plugin.getConfigManager().getPrefix() + warningColor + "Diese Auktion ist nicht mehr verfügbar.");
+                            player.closeInventory();
+                        }
+                    }
+                    break;
+                case "confirm_purchase":
+                    // Confirm purchase of an auction
+                    int confirmAuctionId = getAuctionId(clickedItem);
+                    if (confirmAuctionId != -1) {
+                        Auction auction = auctionAPI.getAuction(confirmAuctionId);
+                        if (auction != null && auction.isActive()) {
                             if (auctionAPI.purchaseAuction(auction, player)) {
                                 player.closeInventory();
                                 player.sendMessage(plugin.getConfigManager().getPrefix() + highlightColor + "Du hast die Auktion erfolgreich gekauft!");
@@ -1166,6 +1414,12 @@ public class AuctionMenuHandler implements Listener {
                             player.closeInventory();
                         }
                     }
+                    break;
+                case "cancel_purchase":
+                    // Go back to the previous menu
+                    player.closeInventory();
+                    // Reopen the main menu
+                    openMainMenu(player);
                     break;
                 case "cancel_player_auction":
                     // Cancel a player's auction
@@ -1218,6 +1472,43 @@ public class AuctionMenuHandler implements Listener {
                         }
                     }
                     break;
+                case "custom_price":
+                    // Open custom price menu
+                    openCustomPriceMenu(player, auctionCommand.getCreatingAuctionItem(player));
+                    break;
+                case "adjust_price":
+                    // Adjust the custom price
+                    String adjustmentStr = getValue(clickedItem);
+                    if (adjustmentStr != null) {
+                        try {
+                            double adjustment = Double.parseDouble(adjustmentStr);
+                            double currentPrice = auctionCommand.getAuctionPrice(player);
+                            double minPrice = plugin.getConfigManager().getConfig("config.yml").getDouble("auction.min-price", 10.0);
+                            double maxPrice = plugin.getConfigManager().getConfig("config.yml").getDouble("auction.max-price", 1000000.0);
+                            
+                            // Calculate new price
+                            double newPrice = currentPrice + adjustment;
+                            
+                            // Ensure price is within limits
+                            newPrice = Math.max(minPrice, Math.min(maxPrice, newPrice));
+                            
+                            // Update price
+                            auctionCommand.setAuctionPrice(player, newPrice);
+                            
+                            // Refresh menu
+                            openCustomPriceMenu(player, auctionCommand.getCreatingAuctionItem(player));
+                        } catch (NumberFormatException e) {
+                            player.sendMessage(plugin.getConfigManager().getPrefix() + warningColor + "Ungültige Preisanpassung.");
+                        }
+                    }
+                    break;
+                case "confirm_custom_price":
+                    // Confirm custom price and proceed to duration selection
+                    double customPrice = auctionCommand.getAuctionPrice(player);
+                    if (customPrice > 0) {
+                        openDurationMenu(player, auctionCommand.getCreatingAuctionItem(player), customPrice);
+                    }
+                    break;
                 case "set_duration":
                     // Set the duration for an auction
                     String durationStr = getValue(clickedItem);
@@ -1226,9 +1517,14 @@ public class AuctionMenuHandler implements Listener {
                             int duration = Integer.parseInt(durationStr);
                             auctionCommand.setAuctionDuration(player, duration);
                             
-                            // Open category menu
-                            openCategoryMenu(player, auctionCommand.getCreatingAuctionItem(player), 
-                                    auctionCommand.getAuctionPrice(player), duration);
+                            // Auto-detect category
+                            String autoCategory = determineItemCategory(auctionCommand.getCreatingAuctionItem(player));
+                            auctionCommand.setAuctionCategory(player, autoCategory);
+                            
+                            // Open confirmation menu directly with auto-detected category
+                            openConfirmMenu(player, auctionCommand.getCreatingAuctionItem(player), 
+                                    auctionCommand.getAuctionPrice(player), 
+                                    duration, autoCategory);
                         } catch (NumberFormatException e) {
                             player.sendMessage(plugin.getConfigManager().getPrefix() + warningColor + "Ungültige Dauer.");
                         }
@@ -1323,6 +1619,80 @@ public class AuctionMenuHandler implements Listener {
         }
     }
     
+    /**
+     * Open purchase confirmation menu
+     * @param player The player
+     * @param auction The auction to purchase
+     */
+    public void openPurchaseConfirmationMenu(Player player, Auction auction) {
+        // Create inventory
+        Inventory menu = Bukkit.createInventory(null, 3 * 9, mainMenuTitle + " - Kaufbestätigung");
+        
+        // Add border items
+        for (int i = 0; i < 9; i++) {
+            menu.setItem(i, createMenuItem(borderItem, " ", null));
+        }
+        for (int i = 18; i < 27; i++) {
+            menu.setItem(i, createMenuItem(borderItem, " ", null));
+        }
+        menu.setItem(9, createMenuItem(borderItem, " ", null));
+        menu.setItem(17, createMenuItem(borderItem, " ", null));
+        
+        // Create a display item with auction details
+        ItemStack auctionItem = auction.getItem().clone();
+        ItemMeta meta = auctionItem.getItemMeta();
+        List<String> lore = meta.getLore();
+        if (lore == null) {
+            lore = new ArrayList<>();
+        }
+        
+        // Add auction info to lore
+        if (!lore.isEmpty()) {
+            lore.add("");
+        }
+        
+        lore.add(priceColor + "Preis: " + priceFormat.format(auction.getPrice()) + " " + plugin.getAPI().getEconomyAPI().getCurrencyName());
+        lore.add(sellerColor + "Verkäufer: " + auction.getSellerName());
+        lore.add(timeColor + "Verbleibend: " + auction.getFormattedRemainingTime());
+        lore.add("");
+        lore.add(highlightColor + "Auktions-ID: " + auction.getId());
+        
+        meta.setLore(lore);
+        auctionItem.setItemMeta(meta);
+        
+        // Add auction ID to item
+        auctionItem = setAuctionId(auctionItem, auction.getId());
+        
+        // Add item to menu
+        menu.setItem(13, auctionItem);
+        
+        // Add confirm button
+        ItemStack confirm = createMenuItem(confirmItem, 
+                highlightColor + "Kaufen", 
+                Arrays.asList(
+                    primaryColor + "Kaufe dieses Item für " + priceColor + priceFormat.format(auction.getPrice()) + " " + plugin.getAPI().getEconomyAPI().getCurrencyName() + primaryColor + ".",
+                    "",
+                    secondaryColor + "» " + primaryColor + "Klicke, um den Kauf zu bestätigen"
+                ));
+        confirm = setMenuAction(confirm, "confirm_purchase");
+        confirm = setAuctionId(confirm, auction.getId());
+        menu.setItem(11, confirm);
+        
+        // Add cancel button
+        ItemStack cancel = createMenuItem(cancelItem, 
+                warningColor + "Abbrechen", 
+                Arrays.asList(
+                    primaryColor + "Bricht den Kauf ab.",
+                    "",
+                    secondaryColor + "» " + primaryColor + "Klicke, um den Kauf abzubrechen"
+                ));
+        cancel = setMenuAction(cancel, "cancel_purchase");
+        menu.setItem(15, cancel);
+        
+        // Open the menu
+        player.openInventory(menu);
+    }
+
     /**
      * Handle inventory close events
      * @param event The inventory close event

@@ -138,12 +138,25 @@ public class AuctionAPI {
             return -1;
         }
         
+        // Check if the item is in the player's main hand
+        ItemStack mainHandItem = seller.getInventory().getItemInMainHand();
+        if (mainHandItem == null || mainHandItem.getType() == Material.AIR || 
+            !mainHandItem.isSimilar(item)) {
+            seller.sendMessage(plugin.getConfigManager().getPrefix() + "§cDas Item muss sich in deiner Hand befinden.");
+            return -1;
+        }
+        
         try {
             // Serialize item
             String serializedItem = Auction.serializeItemStack(item);
             
             // Calculate end time
             Instant endTime = Instant.now().plus(durationHours, ChronoUnit.HOURS);
+            
+            // If category is not provided, use "misc" as default
+            if (category == null || category.isEmpty()) {
+                category = "misc";
+            }
             
             // Create auction in database
             String sql = "INSERT INTO " + tablePrefix + "auctions (seller_uuid, item_data, price, end_time, status, category) VALUES (?, ?, ?, ?, ?, ?)";
