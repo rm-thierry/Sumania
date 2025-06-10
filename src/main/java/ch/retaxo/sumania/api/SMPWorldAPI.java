@@ -173,8 +173,7 @@ public class SMPWorldAPI {
             config.set("smp.spawn.yaw", smpWorld.getSpawnPoint().getYaw());
             config.set("smp.spawn.pitch", smpWorld.getSpawnPoint().getPitch());
         }
-        
-        config.set("smp.border-size", smpWorld.getBorderSize());
+
         
         plugin.getConfigManager().saveConfig("config.yml");
     }
@@ -310,9 +309,6 @@ public class SMPWorldAPI {
             teleportFromSMP(player);
         }
         
-        // Get border size and other settings to preserve
-        int borderSize = activeSMPWorld.getBorderSize();
-        
         // Unload the world
         if (!Bukkit.unloadWorld(world, false)) {
             plugin.getLogger().severe("Failed to unload SMP world: " + worldName);
@@ -341,16 +337,10 @@ public class SMPWorldAPI {
             return false;
         }
         
-        // Set world border
-        WorldBorder border = newWorld.getWorldBorder();
-        border.setCenter(newWorld.getSpawnLocation());
-        border.setSize(borderSize);
+
         
         // Configure game rules
         configureGameRules(newWorld, plugin.getConfigManager().getConfig("config.yml"));
-        
-        // Update SMP world object
-        activeSMPWorld = new SMPWorld(worldName, newWorld.getSpawnLocation(), borderSize, true);
         
         // Save to config
         saveWorldToConfig(activeSMPWorld);

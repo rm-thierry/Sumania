@@ -11,7 +11,6 @@ public class SMPWorld {
     
     private String worldName;
     private Location spawnPoint;
-    private final int borderSize;
     private boolean enabled;
     
     /**
@@ -22,7 +21,6 @@ public class SMPWorld {
         this.worldName = worldName;
         World world = Bukkit.getWorld(worldName);
         this.spawnPoint = world != null ? world.getSpawnLocation() : null;
-        this.borderSize = 10000;
         this.enabled = true;
     }
     
@@ -36,7 +34,6 @@ public class SMPWorld {
     public SMPWorld(String worldName, Location spawnPoint, int borderSize, boolean enabled) {
         this.worldName = worldName;
         this.spawnPoint = spawnPoint;
-        this.borderSize = borderSize;
         this.enabled = enabled;
     }
     
@@ -79,15 +76,7 @@ public class SMPWorld {
     public void setSpawnPoint(Location spawnPoint) {
         this.spawnPoint = spawnPoint;
     }
-    
-    /**
-     * Get the border size
-     * @return The border size
-     */
-    public int getBorderSize() {
-        return borderSize;
-    }
-    
+
     /**
      * Check if the SMP world is enabled
      * @return True if the SMP world is enabled

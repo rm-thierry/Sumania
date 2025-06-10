@@ -66,11 +66,7 @@ public class CommandManager {
         
         // Register warp commands if enabled
         if (config.getBoolean("commands.warp", true)) {
-            registerCommand("warp", new WarpCommand(plugin));
-            registerCommand("setwarp", new WarpCommand(plugin));
-            registerCommand("delwarp", new WarpCommand(plugin));
-            registerCommand("warps", new WarpCommand(plugin));
-            registerCommand("warpmenu", new WarpMenuCommand(plugin));
+            registerCommand("warp", new WarpMenuCommand(plugin));
         }
         
         // Register chat commands
@@ -100,9 +96,7 @@ public class CommandManager {
             if (plugin.getCommand("smp") != null) {
                 plugin.getCommand("smp").setTabCompleter(smpCommand);
             }
-            
-            // Create a standalone RTP command using the RandomTeleport class
-            registerCommand("rtp", new RTPCommand(plugin));
+
         }
         
         // Register ban commands if enabled

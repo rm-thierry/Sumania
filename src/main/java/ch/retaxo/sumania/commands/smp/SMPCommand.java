@@ -1,7 +1,6 @@
 package ch.retaxo.sumania.commands.smp;
 
 import ch.retaxo.sumania.Sumania;
-import ch.retaxo.sumania.api.teleport.RandomTeleport;
 import ch.retaxo.sumania.models.SMPWorld;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -181,54 +180,6 @@ public class SMPCommand implements CommandExecutor, TabCompleter {
     }
     
     /**
-     * Random teleport in the SMP world
-     * @param player The player
-     * @return True if the command was executed successfully
-     */
-    private boolean randomTeleport(Player player) {
-        // Check if SMP is enabled
-        if (!plugin.getConfigManager().getConfig("config.yml").getBoolean("smp.enabled", true)) {
-            sendMessage(player, "smp.disabled");
-            return true;
-        }
-        
-        SMPWorld smpWorld = plugin.getAPI().getSMPWorldAPI().getActiveSMPWorld();
-        
-        if (smpWorld == null) {
-            sendMessage(player, "smp.no-world");
-            return true;
-        }
-        
-        // Check if player is in SMP world
-        if (!player.getWorld().getName().equals(smpWorld.getWorldName())) {
-            sendMessage(player, "smp.not-in-world");
-            return true;
-        }
-        
-        // Get the RandomTeleport instance
-        RandomTeleport randomTp = plugin.getAPI().getRandomTeleport();
-        
-        // Check cooldown
-        if (randomTp.isInCooldown(player)) {
-            Map<String, String> replacements = new HashMap<>();
-            replacements.put("seconds", String.valueOf(randomTp.getCooldownTimeLeft(player)));
-            
-            sendMessage(player, "smp.rtp-cooldown", replacements);
-            return true;
-        }
-        
-        // Perform random teleport
-        randomTp.randomTeleport(player)
-            .thenAccept(success -> {
-                if (!success) {
-                    sendMessage(player, "smp.rtp-failed");
-                }
-            });
-        
-        return true;
-    }
-    
-    /**
      * Set the SMP world
      * @param sender The command sender
      * @param worldName The world name
@@ -332,7 +283,6 @@ public class SMPCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage(ChatColor.AQUA + "Status: " + ChatColor.GREEN + "Geladen");
             sender.sendMessage(ChatColor.AQUA + "Spieler: " + ChatColor.WHITE + world.getPlayers().size());
             sender.sendMessage(ChatColor.AQUA + "Umgebung: " + ChatColor.WHITE + world.getEnvironment().name());
-            sender.sendMessage(ChatColor.AQUA + "Border: " + ChatColor.WHITE + smpWorld.getBorderSize() + " Blöcke");
             
             if (smpWorld.getSpawnPoint() != null) {
                 sender.sendMessage(ChatColor.AQUA + "Spawn: " + ChatColor.WHITE + 

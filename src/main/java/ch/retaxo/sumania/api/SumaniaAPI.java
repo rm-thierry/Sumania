@@ -4,7 +4,6 @@ import ch.retaxo.sumania.Sumania;
 import ch.retaxo.sumania.api.economy.EconomyAPI;
 import ch.retaxo.sumania.api.player.PlayerAPI;
 import ch.retaxo.sumania.api.teleport.TeleportAPI;
-import ch.retaxo.sumania.api.teleport.RandomTeleport;
 import ch.retaxo.sumania.api.claim.ClaimAPI;
 import ch.retaxo.sumania.api.chat.ChatAPI;
 
@@ -20,7 +19,6 @@ public class SumaniaAPI {
     private final ClaimAPI claimAPI;
     private final ChatAPI chatAPI;
     private final SMPWorldAPI smpWorldAPI;
-    private final RandomTeleport randomTeleport;
     
     /**
      * Constructor
@@ -33,7 +31,6 @@ public class SumaniaAPI {
         this.teleportAPI = new TeleportAPI(plugin);
         this.claimAPI = new ClaimAPI(plugin);
         this.chatAPI = new ChatAPI(plugin);
-        this.randomTeleport = new RandomTeleport(plugin);
         this.smpWorldAPI = new SMPWorldAPI(plugin);
     }
     
@@ -84,12 +81,5 @@ public class SumaniaAPI {
     public SMPWorldAPI getSMPWorldAPI() {
         return smpWorldAPI;
     }
-    
-    /**
-     * Get the random teleport utility
-     * @return The random teleport utility
-     */
-    public RandomTeleport getRandomTeleport() {
-        return randomTeleport;
-    }
+
 }

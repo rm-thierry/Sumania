@@ -74,28 +74,11 @@ commands:
     aliases: [zuhause-liste, homelist]
     permission: sumania.home.list
   
-  # Warp commands
+
   warp:
-    description: Teleportiere zu einem Warp
-    usage: /warp <Name>
-    permission: sumania.warp.use
-  setwarp:
-    description: Setze einen Warp
-    usage: /setwarp <Name>
-    permission: sumania.warp.set
-  delwarp:
-    description: Lösche einen Warp
-    usage: /delwarp <Name>
-    permission: sumania.warp.delete
-  warps:
-    description: Liste alle Warps auf
-    usage: /warps
-    aliases: [warplist]
-    permission: sumania.warp.list
-  warpmenu:
     description: Öffne das Warp-Menü
-    usage: /warpmenu
-    aliases: [wm, warps-menu]
+    usage: /warp
+    aliases: [warps]
     permission: sumania.warp.menu
   
   # Chat commands
@@ -131,14 +114,6 @@ commands:
     usage: /rewards [daily|weekly|monthly]
     aliases: [belohnungen, reward, belohnung]
     permission: sumania.rewards
-    
-  # RTP command
-  rtp:
-    description: Teleportiere dich an einen zufälligen Ort in der SMP-Welt
-    usage: /rtp
-    aliases: [randomtp, randomteleport]
-    permission: sumania.rtp
-    
   # SMP command
   smp:
     description: SMP-Weltmanagement (nur für Administratoren)
