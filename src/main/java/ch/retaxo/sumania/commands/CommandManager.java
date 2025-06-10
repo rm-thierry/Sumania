@@ -3,6 +3,7 @@ package ch.retaxo.sumania.commands;
 import ch.retaxo.sumania.Sumania;
 import ch.retaxo.sumania.commands.admin.BanCommand;
 import ch.retaxo.sumania.commands.admin.ReloadCommand;
+import ch.retaxo.sumania.commands.auction.AuctionCommand;
 import ch.retaxo.sumania.commands.chat.ChatCommand;
 import ch.retaxo.sumania.commands.discord.DiscordCommand;
 import ch.retaxo.sumania.commands.economy.BalanceCommand;
@@ -81,7 +82,21 @@ public class CommandManager {
         if (config.getBoolean("commands.shop", true)) {
             registerCommand("shop", new ShopCommand(plugin));
         }
-
+        
+        // Register auction commands if enabled
+        if (config.getBoolean("commands.auction", true)) {
+            AuctionCommand auctionCommand = new AuctionCommand(plugin);
+            registerCommand("auction", auctionCommand);
+            registerCommand("ah", auctionCommand);
+            
+            // Set tab completer for auction commands
+            if (plugin.getCommand("auction") != null) {
+                plugin.getCommand("auction").setTabCompleter(auctionCommand);
+            }
+            if (plugin.getCommand("ah") != null) {
+                plugin.getCommand("ah").setTabCompleter(auctionCommand);
+            }
+        }
         
         // Register rewards commands if enabled
         if (config.getBoolean("commands.rewards", true)) {
@@ -132,5 +147,20 @@ public class CommandManager {
         } else {
             plugin.getLogger().warning("Failed to register command: " + name);
         }
+    }
+    
+    /**
+     * Get a command executor by name
+     * @param name The name of the command
+     * @return The command executor, or null if not found
+     */
+    public CommandExecutor getCommand(String name) {
+        PluginCommand command = plugin.getCommand(name);
+        
+        if (command != null) {
+            return command.getExecutor();
+        }
+        
+        return null;
     }
 }

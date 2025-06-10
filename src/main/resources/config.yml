@@ -147,6 +147,8 @@ commands:
   lottery: true
   # Belohnungs-Befehle aktivieren
   rewards: true
+  # Auktionshaus-Befehle aktivieren
+  auction: true
 
 # Discord-Integration
 discord:
@@ -195,6 +197,61 @@ shop:
         - item: "IRON_AXE"
           buy-price: 180.0
           sell-price: 90.0
+
+# Auktionshaus-System
+auction:
+  # Auktionshaus aktivieren
+  enabled: true
+  # Mindestpreis für Auktionen
+  min-price: 10.0
+  # Maximaler Preis für Auktionen
+  max-price: 1000000.0
+  # Gebühren für das Einstellen einer Auktion (in Prozent)
+  listing-fee-percent: 5.0
+  # Mindestgebühr für eine Auktion
+  min-listing-fee: 10.0
+  # Maximale Gebühr für eine Auktion
+  max-listing-fee: 1000.0
+  # Mindestlaufzeit für Auktionen (in Stunden)
+  min-duration: 1
+  # Maximale Laufzeit für Auktionen (in Stunden)
+  max-duration: 72
+  # Standardlaufzeit für Auktionen (in Stunden)
+  default-duration: 24
+  # Anzahl der eigenen gleichzeitigen Auktionen pro Spieler
+  max-active-auctions-per-player: 10
+  # Anzahl der Tage, die abgelaufene Auktionen aufbewahrt werden
+  expired-auctions-days: 7
+  # Anzahl der Reihen im Hauptmenü (1-6)
+  main-menu-rows: 6
+  # Anzahl der Elemente pro Seite
+  items-per-page: 36
+  # Stil-Einstellungen
+  style:
+    menu-title: "§8» §7Auktionshaus"
+    create-auction-title: "§8» §7Auktion erstellen"
+    player-auctions-title: "§8» §7Meine Auktionen"
+    categories-title: "§8» §7Kategorien"
+    search-title: "§8» §7Suchergebnisse"
+    # Farben
+    primary-color: "§7"
+    secondary-color: "§8"
+    highlight-color: "§b"
+    warning-color: "§e"
+    price-color: "§a"
+    seller-color: "§d"
+    time-color: "§f"
+    # Menü-Icons
+    border-item: "BLACK_STAINED_GLASS_PANE"
+    create-auction-item: "GOLD_INGOT"
+    player-auctions-item: "PLAYER_HEAD"
+    categories-item: "CHEST"
+    search-item: "COMPASS"
+    next-page-item: "ARROW"
+    previous-page-item: "ARROW"
+    back-item: "BARRIER"
+    confirm-item: "LIME_STAINED_GLASS_PANE"
+    cancel-item: "RED_STAINED_GLASS_PANE"
 
 # Verlosungssystem
 lottery:

@@ -77,6 +77,11 @@ public final class Sumania extends JavaPlugin implements Listener {
         // Save configs
         configManager.saveAllConfigs();
         
+        // Cleanup auctions
+        if (api != null && api.getAuctionAPI() != null) {
+            api.getAuctionAPI().shutdown();
+        }
+        
         // Close database connection
         configManager.closeDbConnection();
         

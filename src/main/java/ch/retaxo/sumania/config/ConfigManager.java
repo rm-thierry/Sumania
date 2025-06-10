@@ -115,7 +115,7 @@ public class ConfigManager {
                 String url = "jdbc:mysql://" + host + ":" + port + "/" + database + "?useSSL=" + useSSL;
                 
                 try {
-                    Class.forName("com.mysql.jdbc.Driver");
+                    Class.forName("com.mysql.cj.jdbc.Driver");
                     dbConnection = DriverManager.getConnection(url, username, password);
                     plugin.getLogger().info("Connected to MySQL database!");
                 } catch (ClassNotFoundException e) {
@@ -237,7 +237,7 @@ public class ConfigManager {
                 "active BOOLEAN DEFAULT 1, " +
                 "unbanned_by VARCHAR(36) NULL, " +
                 "unbanned_time TIMESTAMP NULL, " +
-                "INDEX idx_uuid (uuid)" +
+                (dbType.equalsIgnoreCase("mysql") ? "INDEX idx_uuid (uuid)" : "") +
                 ")";
         
         // Mutes table
@@ -251,7 +251,24 @@ public class ConfigManager {
                 "active BOOLEAN DEFAULT 1, " +
                 "unmuted_by VARCHAR(36) NULL, " +
                 "unmuted_time TIMESTAMP NULL, " +
-                "INDEX idx_uuid (uuid)" +
+                (dbType.equalsIgnoreCase("mysql") ? "INDEX idx_uuid (uuid)" : "") +
+                ")";
+                
+        // Auctions table
+        String auctionsTable = "CREATE TABLE IF NOT EXISTS " + tablePrefix + "auctions (" +
+                "id INTEGER PRIMARY KEY " + (dbType.equalsIgnoreCase("mysql") ? "AUTO_INCREMENT" : "AUTOINCREMENT") + ", " +
+                "seller_uuid VARCHAR(36) NOT NULL, " +
+                "buyer_uuid VARCHAR(36) NULL, " +
+                "item_data TEXT NOT NULL, " +
+                "price DOUBLE NOT NULL, " +
+                "created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
+                "end_time TIMESTAMP NOT NULL, " +
+                "status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE', " + // ACTIVE, SOLD, EXPIRED, CANCELLED
+                "category VARCHAR(32) NULL, " +
+                (dbType.equalsIgnoreCase("mysql") ? "INDEX idx_seller (seller_uuid), " : "") +
+                (dbType.equalsIgnoreCase("mysql") ? "INDEX idx_buyer (buyer_uuid), " : "") +
+                (dbType.equalsIgnoreCase("mysql") ? "INDEX idx_status (status), " : "") +
+                (dbType.equalsIgnoreCase("mysql") ? "INDEX idx_end_time (end_time)" : "") +
                 ")";
         
         // Execute all queries
@@ -263,7 +280,8 @@ public class ConfigManager {
              PreparedStatement lotteryStmt = dbConnection.prepareStatement(lotteryTable);
              PreparedStatement rewardsStmt = dbConnection.prepareStatement(rewardsTable);
              PreparedStatement bansStmt = dbConnection.prepareStatement(bansTable);
-             PreparedStatement mutesStmt = dbConnection.prepareStatement(mutesTable)) {
+             PreparedStatement mutesStmt = dbConnection.prepareStatement(mutesTable);
+             PreparedStatement auctionsStmt = dbConnection.prepareStatement(auctionsTable)) {
             
             playersStmt.executeUpdate();
             homesStmt.executeUpdate();
@@ -274,6 +292,7 @@ public class ConfigManager {
             rewardsStmt.executeUpdate();
             bansStmt.executeUpdate();
             mutesStmt.executeUpdate();
+            auctionsStmt.executeUpdate();
             
             plugin.getLogger().info("Database tables created or verified!");
         }

@@ -1,6 +1,7 @@
 package ch.retaxo.sumania.api;
 
 import ch.retaxo.sumania.Sumania;
+import ch.retaxo.sumania.api.auction.AuctionAPI;
 import ch.retaxo.sumania.api.economy.EconomyAPI;
 import ch.retaxo.sumania.api.player.PlayerAPI;
 import ch.retaxo.sumania.api.teleport.TeleportAPI;
@@ -19,6 +20,7 @@ public class SumaniaAPI {
     private final ClaimAPI claimAPI;
     private final ChatAPI chatAPI;
     private final SMPWorldAPI smpWorldAPI;
+    private final AuctionAPI auctionAPI;
     
     /**
      * Constructor
@@ -32,6 +34,7 @@ public class SumaniaAPI {
         this.claimAPI = new ClaimAPI(plugin);
         this.chatAPI = new ChatAPI(plugin);
         this.smpWorldAPI = new SMPWorldAPI(plugin);
+        this.auctionAPI = new AuctionAPI(plugin);
     }
     
     /**
@@ -81,5 +84,12 @@ public class SumaniaAPI {
     public SMPWorldAPI getSMPWorldAPI() {
         return smpWorldAPI;
     }
-
+    
+    /**
+     * Get the auction API
+     * @return The auction API
+     */
+    public AuctionAPI getAuctionAPI() {
+        return auctionAPI;
+    }
 }

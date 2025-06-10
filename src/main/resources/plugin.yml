@@ -100,6 +100,13 @@ commands:
     usage: /shop [Kategorie]
     aliases: [store, markt, laden]
     permission: sumania.shop
+
+  # Auction commands
+  auction:
+    description: Öffne das Auktionshaus
+    usage: /auction [sell|cancel|my|help]
+    aliases: [ah, auktion]
+    permission: sumania.auction
     
   # Lottery commands
   lottery:
@@ -253,6 +260,14 @@ permissions:
     default: true
   sumania.shop.admin:
     description: Erlaubt das Verwalten des Shops
+    default: op
+    
+  # Auction permissions
+  sumania.auction:
+    description: Erlaubt Zugriff auf das Auktionshaus
+    default: true
+  sumania.auction.admin:
+    description: Erlaubt das Verwalten des Auktionshauses
     default: op
     
   # Lottery permissions
