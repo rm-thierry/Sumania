@@ -156,7 +156,7 @@ public class AuctionMenuHandler implements Listener {
         // Create inventory
         Inventory menu = Bukkit.createInventory(null, mainMenuRows * 9, mainMenuTitle);
         
-        // Add border items
+        // Add border items - full border around the entire GUI
         for (int i = 0; i < 9; i++) {
             menu.setItem(i, createMenuItem(borderItem, " ", null));
         }
@@ -212,14 +212,27 @@ public class AuctionMenuHandler implements Listener {
         categories = setMenuAction(categories, "categories");
         menu.setItem(6, categories);
         
-        // Add recent auctions
+        // Add recent auctions - but leave the first slot (10) empty and maintain border
         List<Auction> recentAuctions = auctionAPI.getActiveAuctions();
-        int maxAuctions = Math.min(recentAuctions.size(), (mainMenuRows - 2) * 7);
+        int maxAuctions = Math.min(recentAuctions.size(), (mainMenuRows - 2) * 7 - 1);
         
+        // Start from slot 11 (skip slot 10) and maintain proper spacing
         for (int i = 0; i < maxAuctions; i++) {
             Auction auction = recentAuctions.get(i);
             ItemStack auctionItem = createAuctionItem(auction);
-            menu.setItem(9 + i + (i / 7) * 2, auctionItem);
+            
+            // Calculate position - skip first slot (10) in the first row
+            int position;
+            if (i < 6) {
+                position = 11 + i; // slots 11-16 in first row
+            } else {
+                // For subsequent rows, use normal calculation but adjust for the skipped slot
+                int row = (i + 1) / 7; // +1 because we skipped one
+                int col = (i + 1) % 7; // +1 because we skipped one
+                position = 9 + col + (row * 9);
+            }
+            
+            menu.setItem(position, auctionItem);
         }
         
         // Open the menu
@@ -612,12 +625,16 @@ public class AuctionMenuHandler implements Listener {
         // Create inventory
         Inventory menu = Bukkit.createInventory(null, 6 * 9, playerAuctionsTitle);
         
-        // Add border items
+        // Add border items - full border around the entire GUI
         for (int i = 0; i < 9; i++) {
             menu.setItem(i, createMenuItem(borderItem, " ", null));
         }
         for (int i = 45; i < 54; i++) {
             menu.setItem(i, createMenuItem(borderItem, " ", null));
+        }
+        for (int i = 0; i < 6; i++) {
+            menu.setItem(i * 9, createMenuItem(borderItem, " ", null));
+            menu.setItem(i * 9 + 8, createMenuItem(borderItem, " ", null));
         }
         
         // Get player auctions
@@ -634,16 +651,27 @@ public class AuctionMenuHandler implements Listener {
                     ));
             menu.setItem(22, noAuctions);
         } else {
-            // Add auctions
-            int slot = 9;
+            // Add auctions - maintain border and skip first slot in each row
+            int slot = 10; // Start at the second slot of the second row
+            int itemsAdded = 0;
             
             for (Auction auction : auctions) {
-                if (slot >= 45) break; // Only show max 36 auctions
+                if (itemsAdded >= 28) break; // Limit due to border and navigation
+                
+                // Skip border slots
+                if (slot % 9 == 0) {
+                    slot++; // Skip left border
+                }
+                if (slot % 9 == 8) {
+                    slot += 2; // Skip right border and move to next row
+                }
+                if (slot >= 45) break; // Stop at bottom border
                 
                 ItemStack auctionItem = createPlayerAuctionItem(auction);
                 menu.setItem(slot, auctionItem);
                 
                 slot++;
+                itemsAdded++;
             }
         }
         
@@ -1389,6 +1417,11 @@ public class AuctionMenuHandler implements Listener {
                     if (auctionId != -1) {
                         Auction auction = auctionAPI.getAuction(auctionId);
                         if (auction != null && auction.isActive()) {
+                            // Check if player is the seller
+                            if (auction.getSellerUuid().equals(player.getUniqueId())) {
+                                player.sendMessage(plugin.getConfigManager().getPrefix() + warningColor + "Du kannst deine eigenen Auktionen nicht kaufen.");
+                                return;
+                            }
                             // Open confirmation menu before purchase
                             openPurchaseConfirmationMenu(player, auction);
                         } else {
@@ -1465,8 +1498,10 @@ public class AuctionMenuHandler implements Listener {
                             double price = Double.parseDouble(priceStr);
                             auctionCommand.setAuctionPrice(player, price);
                             
-                            // Open duration menu
-                            openDurationMenu(player, auctionCommand.getCreatingAuctionItem(player), price);
+                            // Open duration menu with slight delay to prevent GUI issues
+                            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                                openDurationMenu(player, auctionCommand.getCreatingAuctionItem(player), price);
+                            }, 2L);
                         } catch (NumberFormatException e) {
                             player.sendMessage(plugin.getConfigManager().getPrefix() + warningColor + "Ungültiger Preis.");
                         }
@@ -1506,7 +1541,10 @@ public class AuctionMenuHandler implements Listener {
                     // Confirm custom price and proceed to duration selection
                     double customPrice = auctionCommand.getAuctionPrice(player);
                     if (customPrice > 0) {
-                        openDurationMenu(player, auctionCommand.getCreatingAuctionItem(player), customPrice);
+                        // Open duration menu with slight delay to prevent GUI issues
+                        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                            openDurationMenu(player, auctionCommand.getCreatingAuctionItem(player), customPrice);
+                        }, 2L);
                     }
                     break;
                 case "set_duration":
@@ -1521,10 +1559,12 @@ public class AuctionMenuHandler implements Listener {
                             String autoCategory = determineItemCategory(auctionCommand.getCreatingAuctionItem(player));
                             auctionCommand.setAuctionCategory(player, autoCategory);
                             
-                            // Open confirmation menu directly with auto-detected category
-                            openConfirmMenu(player, auctionCommand.getCreatingAuctionItem(player), 
-                                    auctionCommand.getAuctionPrice(player), 
-                                    duration, autoCategory);
+                            // Open confirmation menu with slight delay to prevent GUI issues
+                            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                                openConfirmMenu(player, auctionCommand.getCreatingAuctionItem(player), 
+                                        auctionCommand.getAuctionPrice(player), 
+                                        duration, autoCategory);
+                            }, 2L);
                         } catch (NumberFormatException e) {
                             player.sendMessage(plugin.getConfigManager().getPrefix() + warningColor + "Ungültige Dauer.");
                         }
@@ -1536,17 +1576,21 @@ public class AuctionMenuHandler implements Listener {
                     if (category != null) {
                         auctionCommand.setAuctionCategory(player, category.equals("null") ? null : category);
                         
-                        // Open confirm menu
-                        openConfirmMenu(player, auctionCommand.getCreatingAuctionItem(player), 
-                                auctionCommand.getAuctionPrice(player), 
-                                auctionCommand.getAuctionDuration(player), 
-                                auctionCommand.getAuctionCategory(player));
+                        // Open confirm menu with slight delay to prevent GUI issues
+                        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                            openConfirmMenu(player, auctionCommand.getCreatingAuctionItem(player), 
+                                    auctionCommand.getAuctionPrice(player), 
+                                    auctionCommand.getAuctionDuration(player), 
+                                    auctionCommand.getAuctionCategory(player));
+                        }, 2L);
                     }
                     break;
                 case "confirm_auction":
-                    // Confirm auction creation
-                    auctionCommand.completeAuctionCreation(player);
-                    player.closeInventory();
+                    // Confirm auction creation with slight delay to prevent issues
+                    Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                        auctionCommand.completeAuctionCreation(player);
+                        player.closeInventory();
+                    }, 2L);
                     break;
                 case "cancel_auction":
                     // Cancel auction creation
@@ -1555,28 +1599,38 @@ public class AuctionMenuHandler implements Listener {
                     break;
                 case "back_to_price":
                     // Go back to price selection
-                    openCreateAuctionMenu(player, auctionCommand.getCreatingAuctionItem(player));
+                    Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                        openCreateAuctionMenu(player, auctionCommand.getCreatingAuctionItem(player));
+                    }, 2L);
                     break;
                 case "back_to_duration":
                     // Go back to duration selection
-                    openDurationMenu(player, auctionCommand.getCreatingAuctionItem(player), 
-                            auctionCommand.getAuctionPrice(player));
+                    Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                        openDurationMenu(player, auctionCommand.getCreatingAuctionItem(player), 
+                                auctionCommand.getAuctionPrice(player));
+                    }, 2L);
                     break;
                 case "back_to_main":
                     // Go back to main menu
                     auctionCommand.clearViewingData(player);
-                    openMainMenu(player);
+                    Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                        openMainMenu(player);
+                    }, 2L);
                     break;
                 case "back_to_categories":
                     // Go back to categories menu
                     auctionCommand.clearViewingData(player);
-                    openCategoriesMenu(player);
+                    Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                        openCategoriesMenu(player);
+                    }, 2L);
                     break;
                 case "view_category":
                     // View a category
                     String viewCategory = getValue(clickedItem);
                     if (viewCategory != null) {
-                        openCategoryMenu(player, viewCategory);
+                        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                            openCategoryMenu(player, viewCategory);
+                        }, 2L);
                     }
                     break;
                 case "next_page":
@@ -1589,8 +1643,10 @@ public class AuctionMenuHandler implements Listener {
                             
                             if (currentCategory != null) {
                                 auctionCommand.setViewingPage(player, nextPage);
-                                openCategoryMenuPage(player, currentCategory, 
-                                        auctionAPI.getAuctionsByCategory(currentCategory), nextPage);
+                                Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                                    openCategoryMenuPage(player, currentCategory, 
+                                            auctionAPI.getAuctionsByCategory(currentCategory), nextPage);
+                                }, 2L);
                             }
                         } catch (NumberFormatException e) {
                             player.sendMessage(plugin.getConfigManager().getPrefix() + warningColor + "Ungültige Seite.");
@@ -1607,8 +1663,10 @@ public class AuctionMenuHandler implements Listener {
                             
                             if (currentCategory != null) {
                                 auctionCommand.setViewingPage(player, prevPage);
-                                openCategoryMenuPage(player, currentCategory, 
-                                        auctionAPI.getAuctionsByCategory(currentCategory), prevPage);
+                                Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                                    openCategoryMenuPage(player, currentCategory, 
+                                            auctionAPI.getAuctionsByCategory(currentCategory), prevPage);
+                                }, 2L);
                             }
                         } catch (NumberFormatException e) {
                             player.sendMessage(plugin.getConfigManager().getPrefix() + warningColor + "Ungültige Seite.");

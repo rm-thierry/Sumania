@@ -46,6 +46,9 @@ public class AuctionAPI {
         
         // Start cleanup task for expired auctions
         startCleanupTask();
+        
+        // Run immediate cleanup of old auctions on server start
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, this::cleanupOldAuctions);
     }
     
     /**
@@ -384,21 +387,25 @@ public class AuctionAPI {
      */
     public boolean purchaseAuction(Auction auction, Player buyer) {
         if (auction == null || !auction.isActive()) {
+            buyer.sendMessage(plugin.getConfigManager().getPrefix() + "§cDiese Auktion ist nicht mehr aktiv.");
             return false;
         }
         
         // Check if player has enough money
         if (!plugin.getAPI().getEconomyAPI().has(buyer, auction.getPrice())) {
+            buyer.sendMessage(plugin.getConfigManager().getPrefix() + "§cDu hast nicht genug Geld, um diese Auktion zu kaufen.");
             return false;
         }
         
         // Check if buyer is the seller
         if (auction.getSellerUuid().equals(buyer.getUniqueId())) {
+            buyer.sendMessage(plugin.getConfigManager().getPrefix() + "§cDu kannst deine eigenen Auktionen nicht kaufen.");
             return false;
         }
         
         // Check if inventory has space
         if (buyer.getInventory().firstEmpty() == -1) {
+            buyer.sendMessage(plugin.getConfigManager().getPrefix() + "§cDein Inventar ist voll. Bitte schaffe zuerst Platz.");
             return false;
         }
         
@@ -428,6 +435,13 @@ public class AuctionAPI {
                 
                 // Update cache
                 cachedAuctions.put(auction.getId(), auction);
+                
+                // Notify seller if online
+                Player sellerPlayer = Bukkit.getPlayer(auction.getSellerUuid());
+                if (sellerPlayer != null && sellerPlayer.isOnline()) {
+                    sellerPlayer.sendMessage(plugin.getConfigManager().getPrefix() + "§aDeine Auktion für §e" + auction.getPrice() + " " + 
+                                            plugin.getAPI().getEconomyAPI().getCurrencyName() + "§a wurde von §e" + buyer.getName() + "§a gekauft!");
+                }
                 
                 return true;
             }
@@ -584,6 +598,7 @@ public class AuctionAPI {
         Instant cutoffDate = Instant.now().minus(expirationDays, ChronoUnit.DAYS);
         
         try {
+            // Delete old EXPIRED and CANCELLED auctions
             String sql = "DELETE FROM " + tablePrefix + "auctions WHERE status IN (?, ?) AND end_time < ?";
             PreparedStatement statement = connection.prepareStatement(sql);
             statement.setString(1, Auction.Status.EXPIRED.name());
@@ -591,8 +606,16 @@ public class AuctionAPI {
             statement.setTimestamp(3, Timestamp.from(cutoffDate));
             int deleted = statement.executeUpdate();
             
-            if (deleted > 0) {
-                plugin.getLogger().info("Deleted " + deleted + " old auctions");
+            // Also clean up old SOLD auctions
+            String soldSql = "DELETE FROM " + tablePrefix + "auctions WHERE status = ? AND end_time < ?";
+            PreparedStatement soldStatement = connection.prepareStatement(soldSql);
+            soldStatement.setString(1, Auction.Status.SOLD.name());
+            soldStatement.setTimestamp(2, Timestamp.from(cutoffDate));
+            int deletedSold = soldStatement.executeUpdate();
+            
+            int totalDeleted = deleted + deletedSold;
+            if (totalDeleted > 0) {
+                plugin.getLogger().info("Deleted " + totalDeleted + " old auctions");
                 
                 // Clear cache as auctions have been deleted
                 cachedAuctions.clear();
