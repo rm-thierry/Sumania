@@ -1478,7 +1478,11 @@ public class AuctionMenuHandler implements Listener {
                             openPurchaseConfirmationMenu(player, auction);
                         } else {
                             player.sendMessage(plugin.getConfigManager().getPrefix() + warningColor + "Diese Auktion ist nicht mehr verfügbar.");
+                            // Refresh inventory or close it to update view
                             player.closeInventory();
+                            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                                openMainMenu(player);
+                            }, 2L);
                         }
                     }
                     break;
@@ -1491,12 +1495,20 @@ public class AuctionMenuHandler implements Listener {
                             if (auctionAPI.purchaseAuction(auction, player)) {
                                 player.closeInventory();
                                 player.sendMessage(plugin.getConfigManager().getPrefix() + highlightColor + "Du hast die Auktion erfolgreich gekauft!");
+                                // Return to main menu after successful purchase
+                                Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                                    openMainMenu(player);
+                                }, 2L);
                             } else {
                                 player.sendMessage(plugin.getConfigManager().getPrefix() + warningColor + "Du konntest die Auktion nicht kaufen. Überprüfe, ob du genug Geld hast und ob dein Inventar nicht voll ist.");
                             }
                         } else {
                             player.sendMessage(plugin.getConfigManager().getPrefix() + warningColor + "Diese Auktion ist nicht mehr verfügbar.");
                             player.closeInventory();
+                            // Return to main menu after a short delay
+                            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                                openMainMenu(player);
+                            }, 2L);
                         }
                     }
                     break;
@@ -1515,12 +1527,20 @@ public class AuctionMenuHandler implements Listener {
                             if (auctionAPI.cancelAuction(auction, player)) {
                                 player.closeInventory();
                                 player.sendMessage(plugin.getConfigManager().getPrefix() + highlightColor + "Du hast die Auktion erfolgreich abgebrochen!");
+                                // Reopen player auctions menu after a delay
+                                Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                                    openPlayerAuctionsMenu(player);
+                                }, 2L);
                             } else {
                                 player.sendMessage(plugin.getConfigManager().getPrefix() + warningColor + "Du konntest die Auktion nicht abbrechen. Überprüfe, ob dein Inventar nicht voll ist.");
                             }
                         } else {
                             player.sendMessage(plugin.getConfigManager().getPrefix() + warningColor + "Diese Auktion ist nicht mehr verfügbar.");
                             player.closeInventory();
+                            // Refresh view after a short delay
+                            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                                openPlayerAuctionsMenu(player);
+                            }, 2L);
                         }
                     }
                     break;
@@ -1533,12 +1553,20 @@ public class AuctionMenuHandler implements Listener {
                             if (auctionAPI.claimExpiredAuction(auction, player)) {
                                 player.closeInventory();
                                 player.sendMessage(plugin.getConfigManager().getPrefix() + highlightColor + "Du hast das Item erfolgreich zurückgefordert!");
+                                // Reopen player auctions menu after a delay
+                                Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                                    openPlayerAuctionsMenu(player);
+                                }, 2L);
                             } else {
                                 player.sendMessage(plugin.getConfigManager().getPrefix() + warningColor + "Du konntest das Item nicht zurückfordern. Überprüfe, ob dein Inventar nicht voll ist.");
                             }
                         } else {
                             player.sendMessage(plugin.getConfigManager().getPrefix() + warningColor + "Diese Auktion ist nicht mehr verfügbar.");
                             player.closeInventory();
+                            // Refresh view after a short delay
+                            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                                openPlayerAuctionsMenu(player);
+                            }, 2L);
                         }
                     }
                     break;
