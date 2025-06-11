@@ -1424,13 +1424,64 @@ public class AuctionMenuHandler implements Listener {
         // Add detailed debug for all inventory clicks
         plugin.getLogger().info("Inventory click by " + player.getName() + " in inventory: " + event.getView().getTitle());
         if (clickedItem != null && clickedItem.getType() != Material.AIR) {
-            String action = getMenuAction(clickedItem);
-            int auctionId = getAuctionId(clickedItem);
-            plugin.getLogger().info("Clicked item: " + clickedItem.getType() + " with action: " + action + " and auction ID: " + auctionId);
+            ItemMeta meta = clickedItem.getItemMeta();
+            String action = null;
+            int auctionId = -1;
             
-            // Add more details for troubleshooting
+            // First try to get action and ID directly from meta
+            if (meta != null) {
+                PersistentDataContainer container = meta.getPersistentDataContainer();
+                if (container.has(menuActionKey, PersistentDataType.STRING)) {
+                    action = container.get(menuActionKey, PersistentDataType.STRING);
+                }
+                if (container.has(auctionIdKey, PersistentDataType.INTEGER)) {
+                    auctionId = container.get(auctionIdKey, PersistentDataType.INTEGER);
+                }
+            }
+            
+            // Log all available details about the clicked item
+            plugin.getLogger().info("Clicked item: " + clickedItem.getType() + 
+                                   " at slot " + event.getSlot() + 
+                                   " with action: " + action + 
+                                   " and auction ID: " + auctionId);
+            
+            // Special handling for purchase confirmation
+            if (event.getView().getTitle().contains("Kaufbestätigung") && event.getSlot() == 11) {
+                plugin.getLogger().info("PURCHASE BUTTON CLICKED in slot 11!");
+                
+                // Directly handle confirm purchase if this is the purchase button
+                if (auctionId != -1) {
+                    plugin.getLogger().info("CONFIRMED PURCHASE: Player " + player.getName() + " clicked on confirm button for auction ID: " + auctionId);
+                    Auction auction = auctionAPI.getAuction(auctionId);
+                    
+                    if (auction != null) {
+                        plugin.getLogger().info("Processing purchase for auction: " + auction.getId() + 
+                                               ", Price=" + auction.getPrice() + 
+                                               ", Seller=" + auction.getSellerName() + 
+                                               ", Active=" + auction.isActive());
+                        
+                        // Force the auction purchase immediately
+                        event.setCancelled(true);
+                        if (auctionAPI.purchaseAuction(auction, player)) {
+                            player.closeInventory();
+                            player.sendMessage(plugin.getConfigManager().getPrefix() + highlightColor + "Du hast die Auktion erfolgreich gekauft!");
+                            // Return to main menu after successful purchase
+                            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                                openMainMenu(player);
+                            }, 2L);
+                        } else {
+                            player.sendMessage(plugin.getConfigManager().getPrefix() + warningColor + "Du konntest die Auktion nicht kaufen. Überprüfe, ob du genug Geld hast und ob dein Inventar nicht voll ist.");
+                        }
+                        return;
+                    } else {
+                        plugin.getLogger().warning("Could not find auction with ID: " + auctionId);
+                    }
+                }
+            }
+            
+            // Standard action handling
             if (action != null && action.equals("confirm_purchase")) {
-                plugin.getLogger().info("CONFIRMED PURCHASE: Player " + player.getName() + " confirmed purchase of auction ID: " + auctionId);
+                plugin.getLogger().info("CONFIRMED PURCHASE via action: Player " + player.getName() + " confirmed purchase of auction ID: " + auctionId);
                 if (auctionId != -1) {
                     Auction auction = auctionAPI.getAuction(auctionId);
                     if (auction != null) {
@@ -1918,18 +1969,35 @@ public class AuctionMenuHandler implements Listener {
             // Add item to menu
             menu.setItem(13, auctionItem);
             
-            // Add confirm button
-            ItemStack confirm = createMenuItem(confirmItem, 
-                    highlightColor + "Kaufen", 
-                    Arrays.asList(
-                        primaryColor + "Kaufe dieses Item für " + priceColor + priceFormat.format(auction.getPrice()) + " " + plugin.getAPI().getEconomyAPI().getCurrencyName() + primaryColor + ".",
-                        "",
-                        secondaryColor + "» " + primaryColor + "Klicke, um den Kauf zu bestätigen"
-                    ));
-            confirm = setMenuAction(confirm, "confirm_purchase");
-            confirm = setAuctionId(confirm, auction.getId());
-            // Log the created button for debugging
-            plugin.getLogger().info("Creating purchase confirmation with ID:" + auction.getId() + " and auction: " + getMenuAction(confirm));
+            // Add confirm button - IMPORTANT: This item needs special handling
+            Material confirmItemMaterial = confirmItem;
+            String confirmItemName = highlightColor + "Kaufen";
+            List<String> confirmItemLore = Arrays.asList(
+                primaryColor + "Kaufe dieses Item für " + priceColor + priceFormat.format(auction.getPrice()) + " " + plugin.getAPI().getEconomyAPI().getCurrencyName() + primaryColor + ".",
+                "",
+                secondaryColor + "» " + primaryColor + "Klicke, um den Kauf zu bestätigen"
+            );
+            
+            // Create the confirm item with minimal processing
+            ItemStack confirm = new ItemStack(confirmItemMaterial);
+            ItemMeta confirmMeta = confirm.getItemMeta();
+            confirmMeta.setDisplayName(confirmItemName);
+            confirmMeta.setLore(confirmItemLore);
+            confirm.setItemMeta(confirmMeta);
+            
+            // Add crucial data directly to the item's persistent data container
+            PersistentDataContainer container = confirmMeta.getPersistentDataContainer();
+            container.set(menuActionKey, PersistentDataType.STRING, "confirm_purchase");
+            container.set(auctionIdKey, PersistentDataType.INTEGER, auction.getId());
+            confirm.setItemMeta(confirmMeta);
+            
+            // Log detailed debug information
+            plugin.getLogger().info("Created purchase confirmation button: " + confirm.getType() + 
+                                   ", Name: " + confirmMeta.getDisplayName() + 
+                                   ", Action: " + container.get(menuActionKey, PersistentDataType.STRING) +
+                                   ", Auction ID: " + container.get(auctionIdKey, PersistentDataType.INTEGER));
+            
+            // Add confirm button to menu
             menu.setItem(11, confirm);
             
             // Add cancel button
@@ -1943,8 +2011,25 @@ public class AuctionMenuHandler implements Listener {
             cancel = setMenuAction(cancel, "cancel_purchase");
             menu.setItem(15, cancel);
             
-            // Open the menu
+            // Open the menu with verification
             player.openInventory(menu);
+            
+            // Verify menu contents after opening
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                if (player.getOpenInventory().getTopInventory().getSize() == 27) {
+                    ItemStack checkItem = player.getOpenInventory().getTopInventory().getItem(11);
+                    if (checkItem != null) {
+                        ItemMeta checkMeta = checkItem.getItemMeta();
+                        if (checkMeta != null) {
+                            PersistentDataContainer checkContainer = checkMeta.getPersistentDataContainer();
+                            String action = checkContainer.get(menuActionKey, PersistentDataType.STRING);
+                            int id = checkContainer.get(auctionIdKey, PersistentDataType.INTEGER);
+                            plugin.getLogger().info("Verification - Button action: " + action + ", ID: " + id);
+                        }
+                    }
+                }
+            }, 1L);
+            
         } catch (Exception e) {
             plugin.getLogger().severe("Error opening purchase confirmation menu: " + e.getMessage());
             e.printStackTrace();
