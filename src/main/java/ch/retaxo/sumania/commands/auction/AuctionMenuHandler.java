@@ -183,17 +183,7 @@ public class AuctionMenuHandler implements Listener {
         // Create inventory
         Inventory menu = Bukkit.createInventory(null, mainMenuRows * 9, mainMenuTitle);
         
-        // Add border items - full border around the entire GUI
-        for (int i = 0; i < 9; i++) {
-            menu.setItem(i, createMenuItem(borderItem, " ", null));
-        }
-        for (int i = (mainMenuRows - 1) * 9; i < mainMenuRows * 9; i++) {
-            menu.setItem(i, createMenuItem(borderItem, " ", null));
-        }
-        for (int i = 0; i < mainMenuRows; i++) {
-            menu.setItem(i * 9, createMenuItem(borderItem, " ", null));
-            menu.setItem(i * 9 + 8, createMenuItem(borderItem, " ", null));
-        }
+        // Border entfernt
         
         // Add menu items
         ItemStack createAuction = createMenuItem(createAuctionItem, 
@@ -326,15 +316,7 @@ public class AuctionMenuHandler implements Listener {
         // Create inventory
         Inventory menu = Bukkit.createInventory(null, 3 * 9, createAuctionTitle);
         
-        // Add border items
-        for (int i = 0; i < 9; i++) {
-            menu.setItem(i, createMenuItem(borderItem, " ", null));
-        }
-        for (int i = 18; i < 27; i++) {
-            menu.setItem(i, createMenuItem(borderItem, " ", null));
-        }
-        menu.setItem(9, createMenuItem(borderItem, " ", null));
-        menu.setItem(17, createMenuItem(borderItem, " ", null));
+        // Border entfernt
         
         // Add item to auction
         menu.setItem(13, item.clone());
@@ -435,15 +417,7 @@ public class AuctionMenuHandler implements Listener {
             // Create inventory
             Inventory menu = Bukkit.createInventory(null, 3 * 9, createAuctionTitle);
             
-            // Add border items
-            for (int i = 0; i < 9; i++) {
-                menu.setItem(i, createMenuItem(borderItem, " ", null));
-            }
-            for (int i = 18; i < 27; i++) {
-                menu.setItem(i, createMenuItem(borderItem, " ", null));
-            }
-            menu.setItem(9, createMenuItem(borderItem, " ", null));
-            menu.setItem(17, createMenuItem(borderItem, " ", null));
+            // Border entfernt
             
             // Add item to auction with price
             ItemStack displayItem = item.clone();
@@ -551,15 +525,7 @@ public class AuctionMenuHandler implements Listener {
             // Create inventory
             Inventory menu = Bukkit.createInventory(null, 3 * 9, createAuctionTitle);
             
-            // Add border items
-            for (int i = 0; i < 9; i++) {
-                menu.setItem(i, createMenuItem(borderItem, " ", null));
-            }
-            for (int i = 18; i < 27; i++) {
-                menu.setItem(i, createMenuItem(borderItem, " ", null));
-            }
-            menu.setItem(9, createMenuItem(borderItem, " ", null));
-            menu.setItem(17, createMenuItem(borderItem, " ", null));
+            // Border entfernt
             
             // Add item to auction with price and duration
             ItemStack displayItem = item.clone();
@@ -653,15 +619,7 @@ public class AuctionMenuHandler implements Listener {
             // Create inventory
             Inventory menu = Bukkit.createInventory(null, 3 * 9, createAuctionTitle);
             
-            // Add border items
-            for (int i = 0; i < 9; i++) {
-                menu.setItem(i, createMenuItem(borderItem, " ", null));
-            }
-            for (int i = 18; i < 27; i++) {
-                menu.setItem(i, createMenuItem(borderItem, " ", null));
-            }
-            menu.setItem(9, createMenuItem(borderItem, " ", null));
-            menu.setItem(17, createMenuItem(borderItem, " ", null));
+            // Border entfernt
             
             // Add item to auction with all details
             ItemStack displayItem = item.clone();
@@ -1274,15 +1232,7 @@ public class AuctionMenuHandler implements Listener {
         // Create inventory
         Inventory menu = Bukkit.createInventory(null, 3 * 9, createAuctionTitle + " - Eigener Preis");
         
-        // Add border items
-        for (int i = 0; i < 9; i++) {
-            menu.setItem(i, createMenuItem(borderItem, " ", null));
-        }
-        for (int i = 18; i < 27; i++) {
-            menu.setItem(i, createMenuItem(borderItem, " ", null));
-        }
-        menu.setItem(9, createMenuItem(borderItem, " ", null));
-        menu.setItem(17, createMenuItem(borderItem, " ", null));
+        // Border entfernt
         
         // Add item to auction
         menu.setItem(4, item.clone());
@@ -2064,15 +2014,7 @@ public class AuctionMenuHandler implements Listener {
             // Create inventory
             Inventory menu = Bukkit.createInventory(null, 3 * 9, mainMenuTitle + " - Kaufbestätigung");
             
-            // Add border items
-            for (int i = 0; i < 9; i++) {
-                menu.setItem(i, createMenuItem(borderItem, " ", null));
-            }
-            for (int i = 18; i < 27; i++) {
-                menu.setItem(i, createMenuItem(borderItem, " ", null));
-            }
-            menu.setItem(9, createMenuItem(borderItem, " ", null));
-            menu.setItem(17, createMenuItem(borderItem, " ", null));
+            // Border entfernt
             
             // Create a display item with auction details
             ItemStack auctionItem = auction.getItem().clone();
