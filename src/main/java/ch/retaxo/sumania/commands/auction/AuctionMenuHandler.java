@@ -1434,11 +1434,19 @@ public class AuctionMenuHandler implements Listener {
             // Check if a valid item was clicked
             if (clickedItem == null) {
                 return;
-            } else if (clickedItem.getType() == Material.AIR ||
-                       !clickedItem.hasItemMeta() ||
-                       !clickedItem.getItemMeta().hasDisplayName()) {
+            } else if (clickedItem.getType() == Material.AIR) {
                 return;
-
+            }
+            
+            // Check for auction items without menu actions
+            int auctionId = getAuctionId(clickedItem);
+            if (auctionId != -1) {
+                Auction auction = auctionAPI.getAuction(auctionId);
+                if (auction != null && auction.isActive() && !auction.getSellerUuid().equals(player.getUniqueId())) {
+                    // Open purchase confirmation menu
+                    openPurchaseConfirmationMenu(player, auction);
+                    return;
+                }
             }
             
             // Handle menu actions
