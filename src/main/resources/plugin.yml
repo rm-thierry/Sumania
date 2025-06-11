@@ -127,6 +127,13 @@ commands:
     usage: /smp [help|reset|setworld|setworldspawn|enable|disable]
     permission: sumania.smp.admin
     
+  # Claim command
+  claim:
+    description: Verwalte deine Grundstücke
+    usage: /claim [buy|list|info|trust|untrust|delete]
+    aliases: [plot, land, grundstück]
+    permission: sumania.claim
+    
   # Ban commands
   ban:
     description: Spieler permanent bannen
@@ -295,6 +302,29 @@ permissions:
     default: op
   sumania.smp.admin:
     description: Erlaubt das Verwalten der SMP-Welt
+    default: op
+    
+  # Claim permissions
+  sumania.claim:
+    description: Erlaubt die Grundfunktionen des Claim-Systems
+    default: true
+  sumania.claim.buy:
+    description: Erlaubt das Kaufen von Claim-Markern
+    default: true
+  sumania.claim.create:
+    description: Erlaubt das Erstellen von Claims
+    default: true
+  sumania.claim.delete:
+    description: Erlaubt das Löschen eigener Claims
+    default: true
+  sumania.claim.trust:
+    description: Erlaubt das Verwalten vertrauter Spieler in eigenen Claims
+    default: true
+  sumania.claim.bypass.limit:
+    description: Erlaubt das Umgehen des Claim-Limits
+    default: op
+  sumania.claim.admin:
+    description: Erlaubt das Verwalten aller Claims
     default: op
     
   # Ban permissions

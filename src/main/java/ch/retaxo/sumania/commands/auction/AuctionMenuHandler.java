@@ -229,7 +229,7 @@ public class AuctionMenuHandler implements Listener {
                 // For subsequent rows, use normal calculation
                 int row = i / 7;
                 int col = i % 7; 
-                position = 9 + col + (row * 9);
+                position = 10 + col + (row * 9);
             }
             
             menu.setItem(position, auctionItem);

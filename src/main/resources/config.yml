@@ -78,7 +78,7 @@ smp:
   # SMP-Weltname
   world-name: "world"
   # Weltgrenze Größe (Durchmesser in Blöcken)
-  border-size: 10000
+  border-size: 1000000
   # Random Teleport Mindestabstand vom Spawn (in Blöcken)
   min-teleport-range: 1000
   # Random Teleport Maximalabstand vom Spawn (in Blöcken)
@@ -117,6 +117,20 @@ protection:
   max-claims-per-player: 3
   # Standardgröße des Claims (Blöcke)
   default-claim-size: 100
+  # Claim-Marker-Block
+  claim-marker:
+    # Material des Claim-Marker-Blocks
+    material: "EMERALD_BLOCK"
+    # Name des Claim-Marker-Blocks
+    name: "§a§lGrundstücks-Marker"
+    # Lore des Claim-Marker-Blocks
+    lore:
+      - "§7Platziere diesen Block, um ein Grundstück zu beanspruchen"
+      - "§7Klicke auf den Block, um das Grundstücksmenü zu öffnen"
+    # Kosten des Claim-Marker-Blocks
+    price: 5000.0
+    # Claim-Größe (Radius vom Marker-Block)
+    radius: 16
 
 # Chat-Einstellungen
 chat:

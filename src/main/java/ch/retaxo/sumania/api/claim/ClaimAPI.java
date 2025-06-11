@@ -4,16 +4,21 @@ import ch.retaxo.sumania.Sumania;
 import ch.retaxo.sumania.models.Claim;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * API for claim-related operations
@@ -52,6 +57,9 @@ public class ClaimAPI {
                     int maxX = claimSection.getInt("max_x");
                     int maxY = claimSection.getInt("max_y");
                     int maxZ = claimSection.getInt("max_z");
+                    int markerX = claimSection.getInt("marker_x");
+                    int markerY = claimSection.getInt("marker_y");
+                    int markerZ = claimSection.getInt("marker_z");
                     
                     List<UUID> trustedPlayers = new ArrayList<>();
                     List<String> trustedPlayersStr = claimSection.getStringList("trusted_players");
@@ -66,6 +74,7 @@ public class ClaimAPI {
                             worldName,
                             minX, minY, minZ,
                             maxX, maxY, maxZ,
+                            markerX, markerY, markerZ,
                             trustedPlayers
                     );
                     
@@ -97,6 +106,9 @@ public class ClaimAPI {
             data.set(path + ".max_x", claim.getMaxX());
             data.set(path + ".max_y", claim.getMaxY());
             data.set(path + ".max_z", claim.getMaxZ());
+            data.set(path + ".marker_x", claim.getMarkerX());
+            data.set(path + ".marker_y", claim.getMarkerY());
+            data.set(path + ".marker_z", claim.getMarkerZ());
             
             List<String> trustedPlayersStr = new ArrayList<>();
             for (UUID uuid : claim.getTrustedPlayers()) {
@@ -119,17 +131,17 @@ public class ClaimAPI {
     }
     
     /**
-     * Create a new claim
+     * Create a new claim using a marker block
      * @param player The player creating the claim
-     * @param location1 The first corner of the claim
-     * @param location2 The second corner of the claim
+     * @param block The marker block
      * @return The created claim, or null if the claim could not be created
      */
-    public Claim createClaim(Player player, Location location1, Location location2) {
+    public Claim createClaim(Player player, Block block) {
         FileConfiguration config = plugin.getConfigManager().getConfig("config.yml");
         
         // Check if claims are enabled
         if (!config.getBoolean("protection.claims-enabled", true)) {
+            plugin.getAPI().getPlayerAPI().sendMessage(player, "claim.claims-disabled");
             return null;
         }
         
@@ -147,23 +159,25 @@ public class ClaimAPI {
             return null;
         }
         
-        // Check if locations are in the same world
-        if (!location1.getWorld().equals(location2.getWorld())) {
-            return null;
-        }
+        // Get claim radius from config
+        int radius = config.getInt("protection.claim-marker.radius", 16);
         
-        // Get min and max coordinates
-        int minX = Math.min(location1.getBlockX(), location2.getBlockX());
-        int minY = Math.min(location1.getBlockY(), location2.getBlockY());
-        int minZ = Math.min(location1.getBlockZ(), location2.getBlockZ());
-        int maxX = Math.max(location1.getBlockX(), location2.getBlockX());
-        int maxY = Math.max(location1.getBlockY(), location2.getBlockY());
-        int maxZ = Math.max(location1.getBlockZ(), location2.getBlockZ());
+        // Calculate claim boundaries
+        int markerX = block.getX();
+        int markerY = block.getY();
+        int markerZ = block.getZ();
+        int minX = markerX - radius;
+        int minY = Math.max(0, markerY - radius);
+        int minZ = markerZ - radius;
+        int maxX = markerX + radius;
+        int maxY = Math.min(255, markerY + radius);
+        int maxZ = markerZ + radius;
         
         // Check if claim overlaps with existing claims
         for (Claim existingClaim : claims.values()) {
-            if (existingClaim.getWorldName().equals(location1.getWorld().getName())) {
+            if (existingClaim.getWorldName().equals(block.getWorld().getName())) {
                 if (existingClaim.overlaps(minX, minY, minZ, maxX, maxY, maxZ)) {
+                    plugin.getAPI().getPlayerAPI().sendMessage(player, "claim.claim-overlap");
                     return null;
                 }
             }
@@ -176,9 +190,10 @@ public class ClaimAPI {
         Claim claim = new Claim(
                 claimId,
                 player.getUniqueId(),
-                location1.getWorld().getName(),
+                block.getWorld().getName(),
                 minX, minY, minZ,
                 maxX, maxY, maxZ,
+                markerX, markerY, markerZ,
                 new ArrayList<>()
         );
         
@@ -187,6 +202,9 @@ public class ClaimAPI {
         
         // Save claims
         saveClaims();
+        
+        // Send success message
+        plugin.getAPI().getPlayerAPI().sendMessage(player, "claim.claim-created");
         
         return claim;
     }
@@ -215,6 +233,23 @@ public class ClaimAPI {
         for (Claim claim : claims.values()) {
             if (claim.getWorldName().equals(location.getWorld().getName())) {
                 if (claim.contains(location.getBlockX(), location.getBlockY(), location.getBlockZ())) {
+                    return claim;
+                }
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Get a claim by marker block location
+     * @param location The location of the marker block
+     * @return The claim, or null if not found
+     */
+    public Claim getClaimByMarker(Location location) {
+        for (Claim claim : claims.values()) {
+            if (claim.getWorldName().equals(location.getWorld().getName())) {
+                if (claim.isMarkerBlock(location.getBlockX(), location.getBlockY(), location.getBlockZ())) {
                     return claim;
                 }
             }
@@ -319,5 +354,125 @@ public class ClaimAPI {
         
         // TODO: Implement permission-based claim limits
         return defaultLimit;
+    }
+    
+    /**
+     * Create a claim marker item
+     * @return The claim marker item
+     */
+    public ItemStack createClaimMarkerItem() {
+        FileConfiguration config = plugin.getConfigManager().getConfig("config.yml");
+        String materialName = config.getString("protection.claim-marker.material", "EMERALD_BLOCK");
+        String displayName = config.getString("protection.claim-marker.name", "§a§lGrundstücks-Marker");
+        List<String> lore = config.getStringList("protection.claim-marker.lore");
+        
+        Material material;
+        try {
+            material = Material.valueOf(materialName);
+        } catch (IllegalArgumentException e) {
+            material = Material.EMERALD_BLOCK;
+        }
+        
+        ItemStack item = new ItemStack(material);
+        ItemMeta meta = item.getItemMeta();
+        
+        if (meta != null) {
+            meta.setDisplayName(displayName);
+            meta.setLore(lore);
+            
+            // Add custom tag to identify as claim marker
+            // Note: In a real implementation, you would use PersistentDataContainer
+            // For simplicity, we'll rely on the display name and lore
+            
+            item.setItemMeta(meta);
+        }
+        
+        return item;
+    }
+    
+    /**
+     * Check if an item is a claim marker
+     * @param item The item to check
+     * @return True if the item is a claim marker
+     */
+    public boolean isClaimMarker(ItemStack item) {
+        if (item == null || !item.hasItemMeta() || !item.getItemMeta().hasDisplayName()) {
+            return false;
+        }
+        
+        FileConfiguration config = plugin.getConfigManager().getConfig("config.yml");
+        String materialName = config.getString("protection.claim-marker.material", "EMERALD_BLOCK");
+        String displayName = config.getString("protection.claim-marker.name", "§a§lGrundstücks-Marker");
+        
+        Material material;
+        try {
+            material = Material.valueOf(materialName);
+        } catch (IllegalArgumentException e) {
+            material = Material.EMERALD_BLOCK;
+        }
+        
+        return item.getType() == material && item.getItemMeta().getDisplayName().equals(displayName);
+    }
+    
+    /**
+     * Get the price of a claim marker
+     * @return The price
+     */
+    public double getClaimMarkerPrice() {
+        FileConfiguration config = plugin.getConfigManager().getConfig("config.yml");
+        return config.getDouble("protection.claim-marker.price", 5000.0);
+    }
+    
+    /**
+     * Buy a claim marker
+     * @param player The player buying the marker
+     * @return True if the purchase was successful
+     */
+    public boolean buyClaimMarker(Player player) {
+        double price = getClaimMarkerPrice();
+        
+        // Check if player has enough money
+        if (plugin.getAPI().getEconomyAPI().getBalance(player) < price) {
+            Map<String, String> replacements = new HashMap<>();
+            replacements.put("price", String.format("%.2f", price));
+            
+            plugin.getAPI().getPlayerAPI().sendMessage(
+                    player,
+                    "claim.not-enough-money",
+                    replacements
+            );
+            
+            return false;
+        }
+        
+        // Take money from player
+        plugin.getAPI().getEconomyAPI().withdrawMoney(player, price);
+        
+        // Give claim marker item
+        player.getInventory().addItem(createClaimMarkerItem());
+        
+        // Send success message
+        Map<String, String> replacements = new HashMap<>();
+        replacements.put("price", String.format("%.2f", price));
+        
+        plugin.getAPI().getPlayerAPI().sendMessage(
+                player,
+                "claim.claim-marker-bought",
+                replacements
+        );
+        
+        return true;
+    }
+    
+    /**
+     * Get the trusted players of a claim
+     * @param claim The claim
+     * @return A list of player names
+     */
+    public List<String> getTrustedPlayerNames(Claim claim) {
+        return claim.getTrustedPlayers().stream()
+                .map(uuid -> Bukkit.getOfflinePlayer(uuid).getName())
+                .filter(name -> name != null)
+                .collect(Collectors.toList());
     }
 }

@@ -3,11 +3,18 @@ package ch.retaxo.sumania.events.player;
 import ch.retaxo.sumania.Sumania;
 import ch.retaxo.sumania.models.Claim;
 import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,12 +37,55 @@ public class PlayerInteractListener implements Listener {
     }
     
     /**
-     * Handle player interact event
+     * Handle player interact event for claim marker interactions
      * @param event The event
      */
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerInteract(PlayerInteractEvent event) {
-        // Handle interactions
+        // Skip if off-hand
+        if (event.getHand() == EquipmentSlot.OFF_HAND) {
+            return;
+        }
+
+        Player player = event.getPlayer();
+        Block clickedBlock = event.getClickedBlock();
+        
+        // Handle right-click on blocks
+        if (event.getAction() == Action.RIGHT_CLICK_BLOCK && clickedBlock != null) {
+            // Check if it's a claim marker block
+            Claim claim = plugin.getAPI().getClaimAPI().getClaimByMarker(clickedBlock.getLocation());
+            
+            if (claim != null) {
+                // Check if player is the owner or trusted
+                if (claim.getOwnerUUID().equals(player.getUniqueId()) || claim.isTrusted(player.getUniqueId())) {
+                    // Open claim management menu
+                    openClaimManagementMenu(player, claim);
+                    event.setCancelled(true);
+                }
+            }
+        }
+    }
+    
+    /**
+     * Handle block place event for claim marker placement
+     * @param event The event
+     */
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onBlockPlace(BlockPlaceEvent event) {
+        Player player = event.getPlayer();
+        Block block = event.getBlock();
+        ItemStack item = event.getItemInHand();
+        
+        // Check if the item is a claim marker
+        if (plugin.getAPI().getClaimAPI().isClaimMarker(item)) {
+            // Try to create a claim with this marker
+            Claim claim = plugin.getAPI().getClaimAPI().createClaim(player, block);
+            
+            if (claim == null) {
+                // Failed to create claim, cancel the block placement
+                event.setCancelled(true);
+            }
+        }
     }
     
     /**
@@ -99,5 +149,16 @@ public class PlayerInteractListener implements Listener {
         
         // Update last claim
         lastClaimIds.put(player.getUniqueId(), currentClaimId);
+    }
+    
+    /**
+     * Open the claim management menu for a player
+     * @param player The player to open the menu for
+     * @param claim The claim to manage
+     */
+    private void openClaimManagementMenu(Player player, Claim claim) {
+        // Create and open the claim management menu
+        ClaimManagementMenu menu = new ClaimManagementMenu(plugin, claim);
+        menu.open(player);
     }
 }

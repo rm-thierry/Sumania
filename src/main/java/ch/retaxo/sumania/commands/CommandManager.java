@@ -5,6 +5,7 @@ import ch.retaxo.sumania.commands.admin.BanCommand;
 import ch.retaxo.sumania.commands.admin.ReloadCommand;
 import ch.retaxo.sumania.commands.auction.AuctionCommand;
 import ch.retaxo.sumania.commands.chat.ChatCommand;
+import ch.retaxo.sumania.commands.claim.ClaimCommand;
 import ch.retaxo.sumania.commands.discord.DiscordCommand;
 import ch.retaxo.sumania.commands.economy.BalanceCommand;
 import ch.retaxo.sumania.commands.economy.PayCommand;
@@ -111,7 +112,15 @@ public class CommandManager {
             if (plugin.getCommand("smp") != null) {
                 plugin.getCommand("smp").setTabCompleter(smpCommand);
             }
-
+        }
+        
+        // Register claim commands if claims are enabled
+        if (config.getBoolean("protection.claims-enabled", true)) {
+            ClaimCommand claimCommand = new ClaimCommand(plugin);
+            registerCommand("claim", claimCommand);
+            if (plugin.getCommand("claim") != null) {
+                plugin.getCommand("claim").setTabCompleter(claimCommand);
+            }
         }
         
         // Register ban commands if enabled

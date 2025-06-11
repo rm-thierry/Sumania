@@ -14,6 +14,7 @@ public class Claim {
     private final int minX, minY, minZ;
     private final int maxX, maxY, maxZ;
     private final List<UUID> trustedPlayers;
+    private final int markerX, markerY, markerZ;
     
     /**
      * Constructor
@@ -26,9 +27,13 @@ public class Claim {
      * @param maxX The maximum X coordinate
      * @param maxY The maximum Y coordinate
      * @param maxZ The maximum Z coordinate
+     * @param markerX The X coordinate of the marker block
+     * @param markerY The Y coordinate of the marker block
+     * @param markerZ The Z coordinate of the marker block
      * @param trustedPlayers A list of UUIDs of players who are trusted in the claim
      */
-    public Claim(String id, UUID ownerUUID, String worldName, int minX, int minY, int minZ, int maxX, int maxY, int maxZ, List<UUID> trustedPlayers) {
+    public Claim(String id, UUID ownerUUID, String worldName, int minX, int minY, int minZ, int maxX, int maxY, int maxZ, 
+                int markerX, int markerY, int markerZ, List<UUID> trustedPlayers) {
         this.id = id;
         this.ownerUUID = ownerUUID;
         this.worldName = worldName;
@@ -38,6 +43,9 @@ public class Claim {
         this.maxX = maxX;
         this.maxY = maxY;
         this.maxZ = maxZ;
+        this.markerX = markerX;
+        this.markerY = markerY;
+        this.markerZ = markerZ;
         this.trustedPlayers = trustedPlayers;
     }
     
@@ -114,6 +122,30 @@ public class Claim {
     }
     
     /**
+     * Get the X coordinate of the marker block
+     * @return The X coordinate of the marker block
+     */
+    public int getMarkerX() {
+        return markerX;
+    }
+    
+    /**
+     * Get the Y coordinate of the marker block
+     * @return The Y coordinate of the marker block
+     */
+    public int getMarkerY() {
+        return markerY;
+    }
+    
+    /**
+     * Get the Z coordinate of the marker block
+     * @return The Z coordinate of the marker block
+     */
+    public int getMarkerZ() {
+        return markerZ;
+    }
+    
+    /**
      * Get a list of UUIDs of players who are trusted in the claim
      * @return The list of trusted players
      */
@@ -171,5 +203,16 @@ public class Claim {
      */
     public boolean overlaps(int otherMinX, int otherMinY, int otherMinZ, int otherMaxX, int otherMaxY, int otherMaxZ) {
         return minX <= otherMaxX && maxX >= otherMinX && minY <= otherMaxY && maxY >= otherMinY && minZ <= otherMaxZ && maxZ >= otherMinZ;
+    }
+    
+    /**
+     * Check if the given coordinates match the marker block location
+     * @param x The X coordinate
+     * @param y The Y coordinate
+     * @param z The Z coordinate
+     * @return True if the coordinates match the marker block location
+     */
+    public boolean isMarkerBlock(int x, int y, int z) {
+        return x == markerX && y == markerY && z == markerZ;
     }
 }
