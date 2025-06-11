@@ -176,6 +176,7 @@ public class AuctionMenuHandler implements Listener {
         if (page >= totalPages) page = totalPages - 1;
         
         // Update the player's current page
+        AuctionCommand auctionCommand = (AuctionCommand) plugin.getCommandManager().getCommand("ah");
         auctionCommand.setViewingPage(player, page);
         auctionCommand.setViewingCategory(player, null); // Reset category when in main menu
         
