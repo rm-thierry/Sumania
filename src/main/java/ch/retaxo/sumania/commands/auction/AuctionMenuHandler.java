@@ -1421,6 +1421,14 @@ public class AuctionMenuHandler implements Listener {
         Player player = (Player) event.getWhoClicked();
         ItemStack clickedItem = event.getCurrentItem();
         
+        // Add debug for all inventory clicks
+        plugin.getLogger().info("Inventory click by " + player.getName() + " in inventory: " + event.getView().getTitle());
+        if (clickedItem != null && clickedItem.getType() != Material.AIR) {
+            String action = getMenuAction(clickedItem);
+            int auctionId = getAuctionId(clickedItem);
+            plugin.getLogger().info("Clicked item: " + clickedItem.getType() + " with action: " + action + " and auction ID: " + auctionId);
+        }
+        
         // Check if inventory is an auction house menu
         if (event.getView().getTitle().startsWith(mainMenuTitle) || 
             event.getView().getTitle().startsWith(createAuctionTitle) || 
@@ -1500,6 +1508,8 @@ public class AuctionMenuHandler implements Listener {
                     if (confirmAuctionId != -1) {
                         Auction auction = auctionAPI.getAuction(confirmAuctionId);
                         if (auction != null && auction.isActive()) {
+                            // Add debug to see if we're getting here
+                            plugin.getLogger().info("Player " + player.getName() + " attempting to purchase auction " + confirmAuctionId);
                             if (auctionAPI.purchaseAuction(auction, player)) {
                                 player.closeInventory();
                                 player.sendMessage(plugin.getConfigManager().getPrefix() + highlightColor + "Du hast die Auktion erfolgreich gekauft!");
@@ -1891,6 +1901,8 @@ public class AuctionMenuHandler implements Listener {
                 ));
         confirm = setMenuAction(confirm, "confirm_purchase");
         confirm = setAuctionId(confirm, auction.getId());
+        // Log the created button for debugging
+        plugin.getLogger().info("Creating purchase confirm button with ID: " + auction.getId() + " and action: " + getMenuAction(confirm));
         menu.setItem(11, confirm);
         
         // Add cancel button
