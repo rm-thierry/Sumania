@@ -1473,8 +1473,8 @@ public class AuctionMenuHandler implements Listener {
                     break;
                 case "buy_auction":
                     // Buy an auction
-                    int auctionId = getAuctionId(clickedItem);
-                    if (auctionId != -1) {
+                    int auctionId1 = getAuctionId(clickedItem);
+                    if (auctionId1 != -1) {
                         Auction auction = auctionAPI.getAuction(auctionId);
                         if (auction != null && auction.isActive()) {
                             // Check if player is the seller
