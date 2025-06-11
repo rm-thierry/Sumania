@@ -1446,36 +1446,61 @@ public class AuctionMenuHandler implements Listener {
                                    " and auction ID: " + auctionId);
             
             // Special handling for purchase confirmation
-            if (event.getView().getTitle().contains("Kaufbestätigung") && event.getSlot() == 11) {
-                plugin.getLogger().info("PURCHASE BUTTON CLICKED in slot 11!");
+            if (event.getView().getTitle().contains("Kaufbestätigung")) {
+                plugin.getLogger().info("Purchase confirmation menu clicked - slot: " + event.getSlot());
                 
-                // Directly handle confirm purchase if this is the purchase button
-                if (auctionId != -1) {
-                    plugin.getLogger().info("CONFIRMED PURCHASE: Player " + player.getName() + " clicked on confirm button for auction ID: " + auctionId);
-                    Auction auction = auctionAPI.getAuction(auctionId);
+                // Handle confirm button click (slot 11)
+                if (event.getSlot() == 11) {
+                    plugin.getLogger().info("PURCHASE BUTTON CLICKED in slot 11!");
                     
-                    if (auction != null) {
-                        plugin.getLogger().info("Processing purchase for auction: " + auction.getId() + 
-                                               ", Price=" + auction.getPrice() + 
-                                               ", Seller=" + auction.getSellerName() + 
-                                               ", Active=" + auction.isActive());
-                        
-                        // Force the auction purchase immediately
-                        event.setCancelled(true);
-                        if (auctionAPI.purchaseAuction(auction, player)) {
-                            player.closeInventory();
-                            player.sendMessage(plugin.getConfigManager().getPrefix() + highlightColor + "Du hast die Auktion erfolgreich gekauft!");
-                            // Return to main menu after successful purchase
-                            Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                                openMainMenu(player);
-                            }, 2L);
-                        } else {
-                            player.sendMessage(plugin.getConfigManager().getPrefix() + warningColor + "Du konntest die Auktion nicht kaufen. Überprüfe, ob du genug Geld hast und ob dein Inventar nicht voll ist.");
-                        }
-                        return;
+                    // Try to get auction ID from item metadata
+                    int purchaseAuctionId = -1;
+                    if (auctionId != -1) {
+                        purchaseAuctionId = auctionId;
                     } else {
-                        plugin.getLogger().warning("Could not find auction with ID: " + auctionId);
+                        // Try to get auction ID from the displayed item in slot 13
+                        ItemStack displayedItem = event.getInventory().getItem(13);
+                        if (displayedItem != null && displayedItem.hasItemMeta()) {
+                            purchaseAuctionId = getAuctionId(displayedItem);
+                            plugin.getLogger().info("Fallback: Got auction ID " + purchaseAuctionId + " from displayed item");
+                        }
                     }
+                    
+                    if (purchaseAuctionId != -1) {
+                        plugin.getLogger().info("CONFIRMED PURCHASE: Player " + player.getName() + " clicked on confirm button for auction ID: " + purchaseAuctionId);
+                        Auction auction = auctionAPI.getAuction(purchaseAuctionId);
+                        
+                        if (auction != null) {
+                            plugin.getLogger().info("Processing purchase for auction: " + auction.getId() + 
+                                                   ", Price=" + auction.getPrice() + 
+                                                   ", Seller=" + auction.getSellerName() + 
+                                                   ", Active=" + auction.isActive());
+                            
+                            // Force the auction purchase immediately
+                            event.setCancelled(true);
+                            if (auctionAPI.purchaseAuction(auction, player)) {
+                                player.closeInventory();
+                                player.sendMessage(plugin.getConfigManager().getPrefix() + highlightColor + "Du hast die Auktion erfolgreich gekauft!");
+                                // Return to main menu after successful purchase
+                                Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                                    openMainMenu(player);
+                                }, 2L);
+                            } else {
+                                player.sendMessage(plugin.getConfigManager().getPrefix() + warningColor + "Du konntest die Auktion nicht kaufen. Überprüfe, ob du genug Geld hast und ob dein Inventar nicht voll ist.");
+                            }
+                            return;
+                        } else {
+                            plugin.getLogger().warning("Could not find auction with ID: " + purchaseAuctionId);
+                        }
+                    } else {
+                        plugin.getLogger().warning("Could not determine auction ID from confirm button or displayed item");
+                    }
+                } else if (event.getSlot() == 15) {
+                    // Cancel button clicked
+                    player.closeInventory();
+                    openMainMenu(player);
+                    event.setCancelled(true);
+                    return;
                 }
             }
             
@@ -1996,6 +2021,13 @@ public class AuctionMenuHandler implements Listener {
                                    ", Name: " + confirmMeta.getDisplayName() + 
                                    ", Action: " + container.get(menuActionKey, PersistentDataType.STRING) +
                                    ", Auction ID: " + container.get(auctionIdKey, PersistentDataType.INTEGER));
+                                   
+            // Perform an additional check to verify data was stored correctly
+            ItemMeta verifyMeta = confirm.getItemMeta();
+            PersistentDataContainer verifyContainer = verifyMeta.getPersistentDataContainer();
+            if (!verifyContainer.has(auctionIdKey, PersistentDataType.INTEGER)) {
+                plugin.getLogger().severe("CRITICAL ERROR: Failed to store auction ID in button metadata!");
+            }
             
             // Add confirm button to menu
             menu.setItem(11, confirm);
