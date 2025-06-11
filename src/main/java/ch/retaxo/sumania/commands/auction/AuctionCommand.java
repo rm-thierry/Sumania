@@ -406,33 +406,69 @@ public class AuctionCommand implements CommandExecutor, TabCompleter, Listener {
      * @param player The player
      */
     public void completeAuctionCreation(Player player) {
-        UUID playerId = player.getUniqueId();
-        
-        if (!creatingAuction.containsKey(playerId) || 
-            !settingPrice.containsKey(playerId) || 
-            !settingDuration.containsKey(playerId)) {
-            player.sendMessage(plugin.getConfigManager().getPrefix() + "§cFehler beim Erstellen der Auktion.");
-            return;
+        try {
+            UUID playerId = player.getUniqueId();
+            
+            // Validate auction parameters
+            if (!creatingAuction.containsKey(playerId)) {
+                player.sendMessage(plugin.getConfigManager().getPrefix() + "§cFehler: Kein Item für die Auktion gefunden.");
+                return;
+            }
+            
+            if (!settingPrice.containsKey(playerId)) {
+                player.sendMessage(plugin.getConfigManager().getPrefix() + "§cFehler: Kein Preis für die Auktion festgelegt.");
+                return;
+            }
+            
+            if (!settingDuration.containsKey(playerId)) {
+                player.sendMessage(plugin.getConfigManager().getPrefix() + "§cFehler: Keine Dauer für die Auktion festgelegt.");
+                return;
+            }
+            
+            ItemStack item = creatingAuction.get(playerId);
+            double price = settingPrice.get(playerId);
+            int duration = settingDuration.get(playerId);
+            String category = settingCategory.get(playerId);
+            
+            // Validate values
+            if (item == null || item.getType() == Material.AIR) {
+                player.sendMessage(plugin.getConfigManager().getPrefix() + "§cFehler: Ungültiges Item für die Auktion.");
+                clearAuctionCreationData(playerId);
+                return;
+            }
+            
+            if (price <= 0) {
+                player.sendMessage(plugin.getConfigManager().getPrefix() + "§cFehler: Ungültiger Preis für die Auktion.");
+                clearAuctionCreationData(playerId);
+                return;
+            }
+            
+            if (duration <= 0) {
+                player.sendMessage(plugin.getConfigManager().getPrefix() + "§cFehler: Ungültige Dauer für die Auktion.");
+                clearAuctionCreationData(playerId);
+                return;
+            }
+            
+            // Create the auction
+            int auctionId = auctionAPI.createAuction(player, item, price, duration, category);
+            
+            if (auctionId != -1) {
+                player.sendMessage(plugin.getConfigManager().getPrefix() + "§aAuktion erfolgreich erstellt! ID: " + auctionId);
+            } else {
+                // AuctionAPI now handles the error message, but still return the item
+                player.getInventory().addItem(item);
+            }
+            
+            // Clear creation data
+            clearAuctionCreationData(playerId);
+        } catch (Exception e) {
+            plugin.getLogger().severe("Error completing auction creation: " + e.getMessage());
+            e.printStackTrace();
+            player.sendMessage(plugin.getConfigManager().getPrefix() + "§cEs ist ein Fehler aufgetreten. Bitte versuche es erneut.");
+            
+            // Make sure to clean up
+            clearAuctionCreationData(player.getUniqueId());
         }
-        
-        ItemStack item = creatingAuction.get(playerId);
-        double price = settingPrice.get(playerId);
-        int duration = settingDuration.get(playerId);
-        String category = settingCategory.get(playerId);
-        
-        // Create the auction
-        int auctionId = auctionAPI.createAuction(player, item, price, duration, category);
-        
-        if (auctionId != -1) {
-            player.sendMessage(plugin.getConfigManager().getPrefix() + "§aAuktion erfolgreich erstellt! ID: " + auctionId);
-        } else {
-            player.sendMessage(plugin.getConfigManager().getPrefix() + "§cFehler beim Erstellen der Auktion.");
-            // Return the item to the player if auction creation failed
-            player.getInventory().addItem(item);
-        }
-        
-        // Clear creation data
-        clearAuctionCreationData(playerId);
     }
     
     /**

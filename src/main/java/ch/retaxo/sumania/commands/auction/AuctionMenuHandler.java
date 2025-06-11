@@ -347,100 +347,112 @@ public class AuctionMenuHandler implements Listener {
      * @param price The price of the auction
      */
     public void openDurationMenu(Player player, ItemStack item, double price) {
-        // Create inventory
-        Inventory menu = Bukkit.createInventory(null, 3 * 9, createAuctionTitle);
-        
-        // Add border items
-        for (int i = 0; i < 9; i++) {
-            menu.setItem(i, createMenuItem(borderItem, " ", null));
+        try {
+            // Validate inputs
+            if (player == null || item == null || price <= 0) {
+                player.sendMessage(plugin.getConfigManager().getPrefix() + "§cFehler beim Öffnen des Auktionsmenüs. Bitte versuche es erneut.");
+                return;
+            }
+            
+            // Create inventory
+            Inventory menu = Bukkit.createInventory(null, 3 * 9, createAuctionTitle);
+            
+            // Add border items
+            for (int i = 0; i < 9; i++) {
+                menu.setItem(i, createMenuItem(borderItem, " ", null));
+            }
+            for (int i = 18; i < 27; i++) {
+                menu.setItem(i, createMenuItem(borderItem, " ", null));
+            }
+            menu.setItem(9, createMenuItem(borderItem, " ", null));
+            menu.setItem(17, createMenuItem(borderItem, " ", null));
+            
+            // Add item to auction with price
+            ItemStack displayItem = item.clone();
+            ItemMeta meta = displayItem.getItemMeta();
+            List<String> lore = meta.getLore();
+            if (lore == null) {
+                lore = new ArrayList<>();
+            }
+            if (!lore.isEmpty()) {
+                lore.add("");
+            }
+            lore.add(priceColor + "Preis: " + priceFormat.format(price) + " " + plugin.getAPI().getEconomyAPI().getCurrencyName());
+            meta.setLore(lore);
+            displayItem.setItemMeta(meta);
+            menu.setItem(13, displayItem);
+            
+            // Add duration options
+            int minDuration = plugin.getConfigManager().getConfig("config.yml").getInt("auction.min-duration", 1);
+            int maxDuration = plugin.getConfigManager().getConfig("config.yml").getInt("auction.max-duration", 72);
+            int defaultDuration = plugin.getConfigManager().getConfig("config.yml").getInt("auction.default-duration", 24);
+            
+            ItemStack duration1 = createMenuItem(Material.CLOCK, 
+                    highlightColor + "Dauer: " + timeColor + "1 Stunde", 
+                    Arrays.asList(
+                        primaryColor + "Setze die Dauer für deine Auktion",
+                        primaryColor + "auf " + timeColor + "1 Stunde" + primaryColor + ".",
+                        "",
+                        secondaryColor + "» " + primaryColor + "Klicke, um diese Dauer zu wählen"
+                    ));
+            duration1 = setMenuAction(duration1, "set_duration");
+            duration1 = setValue(duration1, "1");
+            menu.setItem(11, duration1);
+            
+            ItemStack duration2 = createMenuItem(Material.CLOCK, 
+                    highlightColor + "Dauer: " + timeColor + "6 Stunden", 
+                    Arrays.asList(
+                        primaryColor + "Setze die Dauer für deine Auktion",
+                        primaryColor + "auf " + timeColor + "6 Stunden" + primaryColor + ".",
+                        "",
+                        secondaryColor + "» " + primaryColor + "Klicke, um diese Dauer zu wählen"
+                    ));
+            duration2 = setMenuAction(duration2, "set_duration");
+            duration2 = setValue(duration2, "6");
+            menu.setItem(12, duration2);
+            
+            ItemStack duration3 = createMenuItem(Material.CLOCK, 
+                    highlightColor + "Dauer: " + timeColor + "12 Stunden", 
+                    Arrays.asList(
+                        primaryColor + "Setze die Dauer für deine Auktion",
+                        primaryColor + "auf " + timeColor + "12 Stunden" + primaryColor + ".",
+                        "",
+                        secondaryColor + "» " + primaryColor + "Klicke, um diese Dauer zu wählen"
+                    ));
+            duration3 = setMenuAction(duration3, "set_duration");
+            duration3 = setValue(duration3, "12");
+            menu.setItem(14, duration3);
+            
+            ItemStack duration4 = createMenuItem(Material.CLOCK, 
+                    highlightColor + "Dauer: " + timeColor + "24 Stunden", 
+                    Arrays.asList(
+                        primaryColor + "Setze die Dauer für deine Auktion",
+                        primaryColor + "auf " + timeColor + "24 Stunden" + primaryColor + ".",
+                        "",
+                        secondaryColor + "» " + primaryColor + "Klicke, um diese Dauer zu wählen"
+                    ));
+            duration4 = setMenuAction(duration4, "set_duration");
+            duration4 = setValue(duration4, "24");
+            menu.setItem(15, duration4);
+            
+            // Add back button
+            ItemStack back = createMenuItem(backItem, 
+                    warningColor + "Zurück", 
+                    Arrays.asList(
+                        primaryColor + "Zurück zur Preisauswahl.",
+                        "",
+                        secondaryColor + "» " + primaryColor + "Klicke, um zurückzugehen"
+                    ));
+            back = setMenuAction(back, "back_to_price");
+            menu.setItem(22, back);
+            
+            // Open the menu
+            player.openInventory(menu);
+        } catch (Exception e) {
+            plugin.getLogger().severe("Error opening duration menu: " + e.getMessage());
+            e.printStackTrace();
+            player.sendMessage(plugin.getConfigManager().getPrefix() + "§cEs ist ein Fehler aufgetreten. Bitte versuche es erneut.");
         }
-        for (int i = 18; i < 27; i++) {
-            menu.setItem(i, createMenuItem(borderItem, " ", null));
-        }
-        menu.setItem(9, createMenuItem(borderItem, " ", null));
-        menu.setItem(17, createMenuItem(borderItem, " ", null));
-        
-        // Add item to auction with price
-        ItemStack displayItem = item.clone();
-        ItemMeta meta = displayItem.getItemMeta();
-        List<String> lore = meta.getLore();
-        if (lore == null) {
-            lore = new ArrayList<>();
-        }
-        if (!lore.isEmpty()) {
-            lore.add("");
-        }
-        lore.add(priceColor + "Preis: " + priceFormat.format(price) + " " + plugin.getAPI().getEconomyAPI().getCurrencyName());
-        meta.setLore(lore);
-        displayItem.setItemMeta(meta);
-        menu.setItem(13, displayItem);
-        
-        // Add duration options
-        int minDuration = plugin.getConfigManager().getConfig("config.yml").getInt("auction.min-duration", 1);
-        int maxDuration = plugin.getConfigManager().getConfig("config.yml").getInt("auction.max-duration", 72);
-        int defaultDuration = plugin.getConfigManager().getConfig("config.yml").getInt("auction.default-duration", 24);
-        
-        ItemStack duration1 = createMenuItem(Material.CLOCK, 
-                highlightColor + "Dauer: " + timeColor + "1 Stunde", 
-                Arrays.asList(
-                    primaryColor + "Setze die Dauer für deine Auktion",
-                    primaryColor + "auf " + timeColor + "1 Stunde" + primaryColor + ".",
-                    "",
-                    secondaryColor + "» " + primaryColor + "Klicke, um diese Dauer zu wählen"
-                ));
-        duration1 = setMenuAction(duration1, "set_duration");
-        duration1 = setValue(duration1, "1");
-        menu.setItem(11, duration1);
-        
-        ItemStack duration2 = createMenuItem(Material.CLOCK, 
-                highlightColor + "Dauer: " + timeColor + "6 Stunden", 
-                Arrays.asList(
-                    primaryColor + "Setze die Dauer für deine Auktion",
-                    primaryColor + "auf " + timeColor + "6 Stunden" + primaryColor + ".",
-                    "",
-                    secondaryColor + "» " + primaryColor + "Klicke, um diese Dauer zu wählen"
-                ));
-        duration2 = setMenuAction(duration2, "set_duration");
-        duration2 = setValue(duration2, "6");
-        menu.setItem(12, duration2);
-        
-        ItemStack duration3 = createMenuItem(Material.CLOCK, 
-                highlightColor + "Dauer: " + timeColor + "12 Stunden", 
-                Arrays.asList(
-                    primaryColor + "Setze die Dauer für deine Auktion",
-                    primaryColor + "auf " + timeColor + "12 Stunden" + primaryColor + ".",
-                    "",
-                    secondaryColor + "» " + primaryColor + "Klicke, um diese Dauer zu wählen"
-                ));
-        duration3 = setMenuAction(duration3, "set_duration");
-        duration3 = setValue(duration3, "12");
-        menu.setItem(14, duration3);
-        
-        ItemStack duration4 = createMenuItem(Material.CLOCK, 
-                highlightColor + "Dauer: " + timeColor + "24 Stunden", 
-                Arrays.asList(
-                    primaryColor + "Setze die Dauer für deine Auktion",
-                    primaryColor + "auf " + timeColor + "24 Stunden" + primaryColor + ".",
-                    "",
-                    secondaryColor + "» " + primaryColor + "Klicke, um diese Dauer zu wählen"
-                ));
-        duration4 = setMenuAction(duration4, "set_duration");
-        duration4 = setValue(duration4, "24");
-        menu.setItem(15, duration4);
-        
-        // Add back button
-        ItemStack back = createMenuItem(backItem, 
-                warningColor + "Zurück", 
-                Arrays.asList(
-                    primaryColor + "Zurück zur Preisauswahl.",
-                    "",
-                    secondaryColor + "» " + primaryColor + "Klicke, um zurückzugehen"
-                ));
-        back = setMenuAction(back, "back_to_price");
-        menu.setItem(22, back);
-        
-        // Open the menu
-        player.openInventory(menu);
     }
     
     /**
@@ -451,85 +463,97 @@ public class AuctionMenuHandler implements Listener {
      * @param duration The duration of the auction in hours
      */
     public void openCategoryMenu(Player player, ItemStack item, double price, int duration) {
-        // Create inventory
-        Inventory menu = Bukkit.createInventory(null, 3 * 9, createAuctionTitle);
-        
-        // Add border items
-        for (int i = 0; i < 9; i++) {
-            menu.setItem(i, createMenuItem(borderItem, " ", null));
-        }
-        for (int i = 18; i < 27; i++) {
-            menu.setItem(i, createMenuItem(borderItem, " ", null));
-        }
-        menu.setItem(9, createMenuItem(borderItem, " ", null));
-        menu.setItem(17, createMenuItem(borderItem, " ", null));
-        
-        // Add item to auction with price and duration
-        ItemStack displayItem = item.clone();
-        ItemMeta meta = displayItem.getItemMeta();
-        List<String> lore = meta.getLore();
-        if (lore == null) {
-            lore = new ArrayList<>();
-        }
-        if (!lore.isEmpty()) {
-            lore.add("");
-        }
-        lore.add(priceColor + "Preis: " + priceFormat.format(price) + " " + plugin.getAPI().getEconomyAPI().getCurrencyName());
-        lore.add(timeColor + "Dauer: " + duration + " Stunden");
-        meta.setLore(lore);
-        displayItem.setItemMeta(meta);
-        menu.setItem(4, displayItem);
-        
-        // Add category options
-        Map<String, Material> categories = auctionAPI.getCategories();
-        int slot = 10;
-        
-        for (Map.Entry<String, Material> entry : categories.entrySet()) {
-            if (slot >= 17) break; // Only show max 7 categories
+        try {
+            // Validate inputs
+            if (player == null || item == null || price <= 0 || duration <= 0) {
+                player.sendMessage(plugin.getConfigManager().getPrefix() + "§cFehler beim Öffnen des Kategoriemenüs. Bitte versuche es erneut.");
+                return;
+            }
             
-            String categoryName = entry.getKey();
-            Material categoryIcon = entry.getValue();
+            // Create inventory
+            Inventory menu = Bukkit.createInventory(null, 3 * 9, createAuctionTitle);
             
-            ItemStack categoryItem = createMenuItem(categoryIcon, 
-                    highlightColor + "Kategorie: " + ChatColor.WHITE + categoryName, 
+            // Add border items
+            for (int i = 0; i < 9; i++) {
+                menu.setItem(i, createMenuItem(borderItem, " ", null));
+            }
+            for (int i = 18; i < 27; i++) {
+                menu.setItem(i, createMenuItem(borderItem, " ", null));
+            }
+            menu.setItem(9, createMenuItem(borderItem, " ", null));
+            menu.setItem(17, createMenuItem(borderItem, " ", null));
+            
+            // Add item to auction with price and duration
+            ItemStack displayItem = item.clone();
+            ItemMeta meta = displayItem.getItemMeta();
+            List<String> lore = meta.getLore();
+            if (lore == null) {
+                lore = new ArrayList<>();
+            }
+            if (!lore.isEmpty()) {
+                lore.add("");
+            }
+            lore.add(priceColor + "Preis: " + priceFormat.format(price) + " " + plugin.getAPI().getEconomyAPI().getCurrencyName());
+            lore.add(timeColor + "Dauer: " + duration + " Stunden");
+            meta.setLore(lore);
+            displayItem.setItemMeta(meta);
+            menu.setItem(4, displayItem);
+            
+            // Add category options
+            Map<String, Material> categories = auctionAPI.getCategories();
+            int slot = 10;
+            
+            for (Map.Entry<String, Material> entry : categories.entrySet()) {
+                if (slot >= 17) break; // Only show max 7 categories
+                
+                String categoryName = entry.getKey();
+                Material categoryIcon = entry.getValue();
+                
+                ItemStack categoryItem = createMenuItem(categoryIcon, 
+                        highlightColor + "Kategorie: " + ChatColor.WHITE + categoryName, 
+                        Arrays.asList(
+                            primaryColor + "Wähle die Kategorie " + ChatColor.WHITE + categoryName,
+                            primaryColor + "für deine Auktion.",
+                            "",
+                            secondaryColor + "» " + primaryColor + "Klicke, um diese Kategorie zu wählen"
+                        ));
+                categoryItem = setMenuAction(categoryItem, "set_category");
+                categoryItem = setValue(categoryItem, categoryName);
+                menu.setItem(slot, categoryItem);
+                
+                slot++;
+            }
+            
+            // Add no category option
+            ItemStack noCategory = createMenuItem(Material.BARRIER, 
+                    highlightColor + "Keine Kategorie", 
                     Arrays.asList(
-                        primaryColor + "Wähle die Kategorie " + ChatColor.WHITE + categoryName,
-                        primaryColor + "für deine Auktion.",
+                        primaryColor + "Erstelle die Auktion ohne Kategorie.",
                         "",
-                        secondaryColor + "» " + primaryColor + "Klicke, um diese Kategorie zu wählen"
+                        secondaryColor + "» " + primaryColor + "Klicke, um keine Kategorie zu wählen"
                     ));
-            categoryItem = setMenuAction(categoryItem, "set_category");
-            categoryItem = setValue(categoryItem, categoryName);
-            menu.setItem(slot, categoryItem);
+            noCategory = setMenuAction(noCategory, "set_category");
+            noCategory = setValue(noCategory, "null");
+            menu.setItem(16, noCategory);
             
-            slot++;
+            // Add back button
+            ItemStack back = createMenuItem(backItem, 
+                    warningColor + "Zurück", 
+                    Arrays.asList(
+                        primaryColor + "Zurück zur Dauerauswahl.",
+                        "",
+                        secondaryColor + "» " + primaryColor + "Klicke, um zurückzugehen"
+                    ));
+            back = setMenuAction(back, "back_to_duration");
+            menu.setItem(22, back);
+            
+            // Open the menu
+            player.openInventory(menu);
+        } catch (Exception e) {
+            plugin.getLogger().severe("Error opening category menu: " + e.getMessage());
+            e.printStackTrace();
+            player.sendMessage(plugin.getConfigManager().getPrefix() + "§cEs ist ein Fehler aufgetreten. Bitte versuche es erneut.");
         }
-        
-        // Add no category option
-        ItemStack noCategory = createMenuItem(Material.BARRIER, 
-                highlightColor + "Keine Kategorie", 
-                Arrays.asList(
-                    primaryColor + "Erstelle die Auktion ohne Kategorie.",
-                    "",
-                    secondaryColor + "» " + primaryColor + "Klicke, um keine Kategorie zu wählen"
-                ));
-        noCategory = setMenuAction(noCategory, "set_category");
-        noCategory = setValue(noCategory, "null");
-        menu.setItem(16, noCategory);
-        
-        // Add back button
-        ItemStack back = createMenuItem(backItem, 
-                warningColor + "Zurück", 
-                Arrays.asList(
-                    primaryColor + "Zurück zur Dauerauswahl.",
-                    "",
-                    secondaryColor + "» " + primaryColor + "Klicke, um zurückzugehen"
-                ));
-        back = setMenuAction(back, "back_to_duration");
-        menu.setItem(22, back);
-        
-        // Open the menu
-        player.openInventory(menu);
     }
     
     /**
@@ -541,80 +565,103 @@ public class AuctionMenuHandler implements Listener {
      * @param category The category of the auction
      */
     public void openConfirmMenu(Player player, ItemStack item, double price, int duration, String category) {
-        // Create inventory
-        Inventory menu = Bukkit.createInventory(null, 3 * 9, createAuctionTitle);
-        
-        // Add border items
-        for (int i = 0; i < 9; i++) {
-            menu.setItem(i, createMenuItem(borderItem, " ", null));
-        }
-        for (int i = 18; i < 27; i++) {
-            menu.setItem(i, createMenuItem(borderItem, " ", null));
-        }
-        menu.setItem(9, createMenuItem(borderItem, " ", null));
-        menu.setItem(17, createMenuItem(borderItem, " ", null));
-        
-        // Add item to auction with all details
-        ItemStack displayItem = item.clone();
-        ItemMeta meta = displayItem.getItemMeta();
-        List<String> lore = meta.getLore();
-        if (lore == null) {
-            lore = new ArrayList<>();
-        }
-        if (!lore.isEmpty()) {
+        try {
+            // Validate inputs
+            if (player == null || item == null || price <= 0 || duration <= 0) {
+                player.sendMessage(plugin.getConfigManager().getPrefix() + "§cFehler beim Öffnen des Bestätigungsmenüs. Bitte versuche es erneut.");
+                return;
+            }
+            
+            // Create inventory
+            Inventory menu = Bukkit.createInventory(null, 3 * 9, createAuctionTitle);
+            
+            // Add border items
+            for (int i = 0; i < 9; i++) {
+                menu.setItem(i, createMenuItem(borderItem, " ", null));
+            }
+            for (int i = 18; i < 27; i++) {
+                menu.setItem(i, createMenuItem(borderItem, " ", null));
+            }
+            menu.setItem(9, createMenuItem(borderItem, " ", null));
+            menu.setItem(17, createMenuItem(borderItem, " ", null));
+            
+            // Add item to auction with all details
+            ItemStack displayItem = item.clone();
+            ItemMeta meta = displayItem.getItemMeta();
+            List<String> lore = meta.getLore();
+            if (lore == null) {
+                lore = new ArrayList<>();
+            }
+            if (!lore.isEmpty()) {
+                lore.add("");
+            }
+            lore.add(priceColor + "Preis: " + priceFormat.format(price) + " " + plugin.getAPI().getEconomyAPI().getCurrencyName());
+            lore.add(timeColor + "Dauer: " + duration + " Stunden");
+            if (category != null && !category.equals("null")) {
+                lore.add(secondaryColor + "Kategorie: " + ChatColor.WHITE + category);
+            } else {
+                lore.add(secondaryColor + "Kategorie: " + ChatColor.WHITE + "Keine");
+            }
+            
+            // Calculate and add listing fee
+            double listingFeePercent = plugin.getConfigManager().getConfig("config.yml").getDouble("auction.listing-fee-percent", 5.0);
+            double minListingFee = plugin.getConfigManager().getConfig("config.yml").getDouble("auction.min-listing-fee", 10.0);
+            double maxListingFee = plugin.getConfigManager().getConfig("config.yml").getDouble("auction.max-listing-fee", 1000.0);
+            
+            double listingFee = price * (listingFeePercent / 100.0);
+            listingFee = Math.max(minListingFee, Math.min(maxListingFee, listingFee));
+            
             lore.add("");
+            lore.add(warningColor + "Gebühr: " + priceFormat.format(listingFee) + " " + plugin.getAPI().getEconomyAPI().getCurrencyName());
+            
+            meta.setLore(lore);
+            displayItem.setItemMeta(meta);
+            menu.setItem(13, displayItem);
+            
+            // Add confirm button
+            ItemStack confirm = createMenuItem(confirmItem, 
+                    highlightColor + "Bestätigen", 
+                    Arrays.asList(
+                        primaryColor + "Bestätige die Erstellung deiner Auktion",
+                        primaryColor + "mit den gewählten Einstellungen.",
+                        "",
+                        warningColor + "Achtung: Das Item wird aus deinem",
+                        warningColor + "Inventar entfernt und eine Gebühr wird abgezogen!",
+                        "",
+                        secondaryColor + "» " + primaryColor + "Klicke, um zu bestätigen"
+                    ));
+            confirm = setMenuAction(confirm, "confirm_auction");
+            menu.setItem(11, confirm);
+            
+            // Add back to category button
+            ItemStack backToCategory = createMenuItem(Material.ARROW, 
+                    highlightColor + "Kategorie ändern", 
+                    Arrays.asList(
+                        primaryColor + "Zurück zur Kategorieauswahl.",
+                        "",
+                        secondaryColor + "» " + primaryColor + "Klicke, um die Kategorie zu ändern"
+                    ));
+            backToCategory = setMenuAction(backToCategory, "back_to_category");
+            menu.setItem(15, backToCategory);
+            
+            // Add cancel button
+            ItemStack cancel = createMenuItem(cancelItem, 
+                    warningColor + "Abbrechen", 
+                    Arrays.asList(
+                        primaryColor + "Bricht die Erstellung der Auktion ab.",
+                        "",
+                        secondaryColor + "» " + primaryColor + "Klicke, um abzubrechen"
+                    ));
+            cancel = setMenuAction(cancel, "cancel_auction");
+            menu.setItem(22, cancel);
+            
+            // Open the menu
+            player.openInventory(menu);
+        } catch (Exception e) {
+            plugin.getLogger().severe("Error opening confirmation menu: " + e.getMessage());
+            e.printStackTrace();
+            player.sendMessage(plugin.getConfigManager().getPrefix() + "§cEs ist ein Fehler aufgetreten. Bitte versuche es erneut.");
         }
-        lore.add(priceColor + "Preis: " + priceFormat.format(price) + " " + plugin.getAPI().getEconomyAPI().getCurrencyName());
-        lore.add(timeColor + "Dauer: " + duration + " Stunden");
-        if (category != null && !category.equals("null")) {
-            lore.add(secondaryColor + "Kategorie: " + ChatColor.WHITE + category);
-        } else {
-            lore.add(secondaryColor + "Kategorie: " + ChatColor.WHITE + "Keine");
-        }
-        
-        // Calculate and add listing fee
-        double listingFeePercent = plugin.getConfigManager().getConfig("config.yml").getDouble("auction.listing-fee-percent", 5.0);
-        double minListingFee = plugin.getConfigManager().getConfig("config.yml").getDouble("auction.min-listing-fee", 10.0);
-        double maxListingFee = plugin.getConfigManager().getConfig("config.yml").getDouble("auction.max-listing-fee", 1000.0);
-        
-        double listingFee = price * (listingFeePercent / 100.0);
-        listingFee = Math.max(minListingFee, Math.min(maxListingFee, listingFee));
-        
-        lore.add("");
-        lore.add(warningColor + "Gebühr: " + priceFormat.format(listingFee) + " " + plugin.getAPI().getEconomyAPI().getCurrencyName());
-        
-        meta.setLore(lore);
-        displayItem.setItemMeta(meta);
-        menu.setItem(13, displayItem);
-        
-        // Add confirm button
-        ItemStack confirm = createMenuItem(confirmItem, 
-                highlightColor + "Bestätigen", 
-                Arrays.asList(
-                    primaryColor + "Bestätige die Erstellung deiner Auktion",
-                    primaryColor + "mit den gewählten Einstellungen.",
-                    "",
-                    warningColor + "Achtung: Das Item wird aus deinem",
-                    warningColor + "Inventar entfernt und eine Gebühr wird abgezogen!",
-                    "",
-                    secondaryColor + "» " + primaryColor + "Klicke, um zu bestätigen"
-                ));
-        confirm = setMenuAction(confirm, "confirm_auction");
-        menu.setItem(11, confirm);
-        
-        // Add cancel button
-        ItemStack cancel = createMenuItem(cancelItem, 
-                warningColor + "Abbrechen", 
-                Arrays.asList(
-                    primaryColor + "Bricht die Erstellung der Auktion ab.",
-                    "",
-                    secondaryColor + "» " + primaryColor + "Klicke, um abzubrechen"
-                ));
-        cancel = setMenuAction(cancel, "cancel_auction");
-        menu.setItem(15, cancel);
-        
-        // Open the menu
-        player.openInventory(menu);
     }
     
     /**
@@ -1564,11 +1611,18 @@ public class AuctionMenuHandler implements Listener {
                             String autoCategory = determineItemCategory(auctionCommand.getCreatingAuctionItem(player));
                             auctionCommand.setAuctionCategory(player, autoCategory);
                             
-                            // Open confirmation menu with slight delay to prevent GUI issues
+                            // Open category selection menu first instead of directly to confirm
                             Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                                openConfirmMenu(player, auctionCommand.getCreatingAuctionItem(player), 
-                                        auctionCommand.getAuctionPrice(player), 
-                                        duration, autoCategory);
+                                try {
+                                    openCategoryMenu(player, auctionCommand.getCreatingAuctionItem(player),
+                                            auctionCommand.getAuctionPrice(player), duration);
+                                } catch (Exception e) {
+                                    plugin.getLogger().severe("Error opening category menu: " + e.getMessage());
+                                    e.printStackTrace();
+                                    player.sendMessage(plugin.getConfigManager().getPrefix() + warningColor + 
+                                            "Fehler beim Öffnen des Kategoriemenüs. Bitte versuche es erneut.");
+                                    player.closeInventory();
+                                }
                             }, 2L);
                         } catch (NumberFormatException e) {
                             player.sendMessage(plugin.getConfigManager().getPrefix() + warningColor + "Ungültige Dauer.");
@@ -1611,8 +1665,32 @@ public class AuctionMenuHandler implements Listener {
                 case "back_to_duration":
                     // Go back to duration selection
                     Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                        openDurationMenu(player, auctionCommand.getCreatingAuctionItem(player), 
-                                auctionCommand.getAuctionPrice(player));
+                        try {
+                            openDurationMenu(player, auctionCommand.getCreatingAuctionItem(player), 
+                                    auctionCommand.getAuctionPrice(player));
+                        } catch (Exception e) {
+                            plugin.getLogger().severe("Error going back to duration menu: " + e.getMessage());
+                            e.printStackTrace();
+                            player.sendMessage(plugin.getConfigManager().getPrefix() + warningColor + 
+                                    "Fehler beim Öffnen des Dauermenüs. Bitte versuche es erneut.");
+                            player.closeInventory();
+                        }
+                    }, 2L);
+                    break;
+                case "back_to_category":
+                    // Go back to category selection
+                    Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                        try {
+                            openCategoryMenu(player, auctionCommand.getCreatingAuctionItem(player),
+                                    auctionCommand.getAuctionPrice(player),
+                                    auctionCommand.getAuctionDuration(player));
+                        } catch (Exception e) {
+                            plugin.getLogger().severe("Error going back to category menu: " + e.getMessage());
+                            e.printStackTrace();
+                            player.sendMessage(plugin.getConfigManager().getPrefix() + warningColor + 
+                                    "Fehler beim Öffnen des Kategoriemenüs. Bitte versuche es erneut.");
+                            player.closeInventory();
+                        }
                     }, 2L);
                     break;
                 case "back_to_main":

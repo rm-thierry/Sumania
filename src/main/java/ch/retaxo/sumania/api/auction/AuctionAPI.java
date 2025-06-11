@@ -116,7 +116,13 @@ public class AuctionAPI {
      * @return The created auction ID, or -1 if failed
      */
     public int createAuction(Player seller, ItemStack item, double price, int durationHours, String category) {
+        if (seller == null) {
+            plugin.getLogger().severe("Failed to create auction: seller is null");
+            return -1;
+        }
+        
         if (item == null || item.getType() == Material.AIR) {
+            seller.sendMessage(plugin.getConfigManager().getPrefix() + "§cUngültiges Item für die Auktion.");
             return -1;
         }
         
@@ -128,16 +134,23 @@ public class AuctionAPI {
         
         // Validate inputs
         if (price < minPrice || price > maxPrice) {
+            seller.sendMessage(plugin.getConfigManager().getPrefix() + "§cDer Preis muss zwischen " + 
+                    minPrice + " und " + maxPrice + " " + plugin.getAPI().getEconomyAPI().getCurrencyName() + " liegen.");
             return -1;
         }
         
         if (durationHours < minDuration || durationHours > maxDuration) {
+            seller.sendMessage(plugin.getConfigManager().getPrefix() + "§cDie Dauer muss zwischen " + 
+                    minDuration + " und " + maxDuration + " Stunden liegen.");
             return -1;
         }
         
         // Check if player has too many active auctions
         int maxAuctions = plugin.getConfigManager().getConfig("config.yml").getInt("auction.max-active-auctions-per-player", 10);
-        if (getActiveAuctionCount(seller.getUniqueId()) >= maxAuctions) {
+        int activeAuctions = getActiveAuctionCount(seller.getUniqueId());
+        if (activeAuctions >= maxAuctions) {
+            seller.sendMessage(plugin.getConfigManager().getPrefix() + "§cDu hast bereits die maximale Anzahl an aktiven Auktionen (" + 
+                    maxAuctions + ") erreicht.");
             return -1;
         }
         
@@ -149,6 +162,23 @@ public class AuctionAPI {
             return -1;
         }
         
+        // Calculate listing fee
+        double listingFeePercent = plugin.getConfigManager().getConfig("config.yml").getDouble("auction.listing-fee-percent", 5.0);
+        double minListingFee = plugin.getConfigManager().getConfig("config.yml").getDouble("auction.min-listing-fee", 10.0);
+        double maxListingFee = plugin.getConfigManager().getConfig("config.yml").getDouble("auction.max-listing-fee", 1000.0);
+        
+        double listingFee = price * (listingFeePercent / 100.0);
+        listingFee = Math.max(minListingFee, Math.min(maxListingFee, listingFee));
+        
+        // Check if player has enough money for the listing fee
+        if (plugin.getConfigManager().getConfig("config.yml").getBoolean("economy.enabled", true)) {
+            if (!plugin.getAPI().getEconomyAPI().has(seller, listingFee)) {
+                seller.sendMessage(plugin.getConfigManager().getPrefix() + "§cDu hast nicht genug Geld, um die Gebühr von " + 
+                        listingFee + " " + plugin.getAPI().getEconomyAPI().getCurrencyName() + " zu bezahlen.");
+                return -1;
+            }
+        }
+        
         try {
             // Serialize item
             String serializedItem = Auction.serializeItemStack(item);
@@ -157,7 +187,7 @@ public class AuctionAPI {
             Instant endTime = Instant.now().plus(durationHours, ChronoUnit.HOURS);
             
             // If category is not provided, use "misc" as default
-            if (category == null || category.isEmpty()) {
+            if (category == null || category.isEmpty() || category.equals("null")) {
                 category = "misc";
             }
             
@@ -180,14 +210,7 @@ public class AuctionAPI {
                 // Take the item from the player
                 seller.getInventory().removeItem(item);
                 
-                // Calculate and charge listing fee
-                double listingFeePercent = plugin.getConfigManager().getConfig("config.yml").getDouble("auction.listing-fee-percent", 5.0);
-                double minListingFee = plugin.getConfigManager().getConfig("config.yml").getDouble("auction.min-listing-fee", 10.0);
-                double maxListingFee = plugin.getConfigManager().getConfig("config.yml").getDouble("auction.max-listing-fee", 1000.0);
-                
-                double listingFee = price * (listingFeePercent / 100.0);
-                listingFee = Math.max(minListingFee, Math.min(maxListingFee, listingFee));
-                
+                // Charge listing fee
                 if (listingFee > 0) {
                     // Only charge if economy is enabled
                     if (plugin.getConfigManager().getConfig("config.yml").getBoolean("economy.enabled", true)) {
@@ -200,8 +223,11 @@ public class AuctionAPI {
         } catch (SQLException | IOException e) {
             plugin.getLogger().severe("Error creating auction: " + e.getMessage());
             e.printStackTrace();
+            seller.sendMessage(plugin.getConfigManager().getPrefix() + "§cEs ist ein Fehler bei der Erstellung der Auktion aufgetreten. Bitte versuche es erneut.");
+            return -1;
         }
         
+        seller.sendMessage(plugin.getConfigManager().getPrefix() + "§cEs ist ein unbekannter Fehler aufgetreten. Bitte versuche es erneut.");
         return -1;
     }
     
