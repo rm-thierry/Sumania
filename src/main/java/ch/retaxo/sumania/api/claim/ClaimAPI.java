@@ -446,7 +446,7 @@ public class ClaimAPI {
         }
         
         // Take money from player
-        plugin.getAPI().getEconomyAPI().deposit(player, price);
+        plugin.getAPI().getEconomyAPI().withdraw(player, price);
         
         // Give claim marker item
         player.getInventory().addItem(createClaimMarkerItem());
