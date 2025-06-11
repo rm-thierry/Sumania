@@ -1550,9 +1550,27 @@ public class AuctionMenuHandler implements Listener {
                             double price = Double.parseDouble(priceStr);
                             auctionCommand.setAuctionPrice(player, price);
                             
+                            // Store reference to auction item before closing GUI
+                            ItemStack auctionItem = auctionCommand.getCreatingAuctionItem(player);
+                            if (auctionItem == null) {
+                                player.sendMessage(plugin.getConfigManager().getPrefix() + warningColor + "Fehler: Auktionsitem konnte nicht gefunden werden.");
+                                return;
+                            }
+                            
                             // Open duration menu with slight delay to prevent GUI issues
                             Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                                openDurationMenu(player, auctionCommand.getCreatingAuctionItem(player), price);
+                                try {
+                                    openDurationMenu(player, auctionItem, price);
+                                } catch (Exception ex) {
+                                    plugin.getLogger().severe("Error opening duration menu: " + ex.getMessage());
+                                    ex.printStackTrace();
+                                    player.sendMessage(plugin.getConfigManager().getPrefix() + warningColor + 
+                                            "Fehler beim Öffnen des Dauermenüs. Bitte versuche es erneut.");
+                                    // Make sure to not leave auction creation in an inconsistent state
+                                    if (auctionCommand.isCreatingAuction(player)) {
+                                        auctionCommand.cancelAuctionCreation(player);
+                                    }
+                                }
                             }, 2L);
                         } catch (NumberFormatException e) {
                             player.sendMessage(plugin.getConfigManager().getPrefix() + warningColor + "Ungültiger Preis.");
@@ -1593,10 +1611,30 @@ public class AuctionMenuHandler implements Listener {
                     // Confirm custom price and proceed to duration selection
                     double customPrice = auctionCommand.getAuctionPrice(player);
                     if (customPrice > 0) {
+                        // Store reference to auction item before closing GUI
+                        ItemStack auctionItem = auctionCommand.getCreatingAuctionItem(player);
+                        if (auctionItem == null) {
+                            player.sendMessage(plugin.getConfigManager().getPrefix() + warningColor + "Fehler: Auktionsitem konnte nicht gefunden werden.");
+                            return;
+                        }
+                        
                         // Open duration menu with slight delay to prevent GUI issues
                         Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                            openDurationMenu(player, auctionCommand.getCreatingAuctionItem(player), customPrice);
+                            try {
+                                openDurationMenu(player, auctionItem, customPrice);
+                            } catch (Exception ex) {
+                                plugin.getLogger().severe("Error opening duration menu from custom price: " + ex.getMessage());
+                                ex.printStackTrace();
+                                player.sendMessage(plugin.getConfigManager().getPrefix() + warningColor + 
+                                        "Fehler beim Öffnen des Dauermenüs. Bitte versuche es erneut.");
+                                // Make sure to not leave auction creation in an inconsistent state
+                                if (auctionCommand.isCreatingAuction(player)) {
+                                    auctionCommand.cancelAuctionCreation(player);
+                                }
+                            }
                         }, 2L);
+                    } else {
+                        player.sendMessage(plugin.getConfigManager().getPrefix() + warningColor + "Ungültiger Preis. Bitte wähle einen gültigen Preis aus.");
                     }
                     break;
                 case "set_duration":
@@ -1851,11 +1889,20 @@ public class AuctionMenuHandler implements Listener {
         if (auctionCommand.isCreatingAuction(player)) {
             // Check if the closed inventory was an auction creation menu
             if (event.getView().getTitle().startsWith(createAuctionTitle)) {
-                // Check if player has all required data
-                if (auctionCommand.getAuctionPrice(player) <= 0 || 
-                    auctionCommand.getAuctionDuration(player) <= 0) {
-                    // Player didn't complete the auction creation process
-                    auctionCommand.cancelAuctionCreation(player);
+                // Only cancel if this is the initial price selection menu (not during transitions)
+                if (!event.getView().getTitle().contains("Eigener Preis") && // Not custom price menu
+                    auctionCommand.getAuctionPrice(player) <= 0) { // No price set yet
+                    
+                    // Player is abandoning auction creation at the initial stage
+                    // Wait 5 ticks to make sure it's not a menu transition
+                    Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                        // If no menu is open and auction creation is still in progress
+                        if (player.getOpenInventory().getTitle().equals("Crafting") && 
+                            auctionCommand.isCreatingAuction(player)) {
+                            // Cancel auction creation
+                            auctionCommand.cancelAuctionCreation(player);
+                        }
+                    }, 5L);
                 }
             }
         }
