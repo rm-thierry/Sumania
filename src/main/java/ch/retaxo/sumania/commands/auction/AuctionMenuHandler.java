@@ -1385,8 +1385,13 @@ public class AuctionMenuHandler implements Listener {
             event.setCancelled(true);
             
             // Check if a valid item was clicked
-            if (clickedItem == null || clickedItem.getType() == Material.AIR) {
+            if (clickedItem == null) {
                 return;
+            } else if (clickedItem.getType() == Material.AIR ||
+                       !clickedItem.hasItemMeta() ||
+                       !clickedItem.getItemMeta().hasDisplayName()) {
+                return;
+
             }
             
             // Handle menu actions
