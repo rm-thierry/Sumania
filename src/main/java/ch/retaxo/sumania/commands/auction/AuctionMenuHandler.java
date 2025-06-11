@@ -212,23 +212,23 @@ public class AuctionMenuHandler implements Listener {
         categories = setMenuAction(categories, "categories");
         menu.setItem(6, categories);
         
-        // Add recent auctions - but leave the first slot (10) empty and maintain border
+        // Add recent auctions - use all available slots within the border
         List<Auction> recentAuctions = auctionAPI.getActiveAuctions();
         int maxAuctions = Math.min(recentAuctions.size(), (mainMenuRows - 2) * 7 - 1);
         
-        // Start from slot 11 (skip slot 10) and maintain proper spacing
+        // Start from slot 10 (first item in first row after border) and maintain proper spacing
         for (int i = 0; i < maxAuctions; i++) {
             Auction auction = recentAuctions.get(i);
             ItemStack auctionItem = createAuctionItem(auction);
             
-            // Calculate position - skip first slot (10) in the first row
+            // Calculate position - start with slot 10 in the first row
             int position;
-            if (i < 6) {
-                position = 11 + i; // slots 11-16 in first row
+            if (i < 7) {
+                position = 10 + i; // slots 10-16 in first row
             } else {
-                // For subsequent rows, use normal calculation but adjust for the skipped slot
-                int row = (i + 1) / 7; // +1 because we skipped one
-                int col = (i + 1) % 7; // +1 because we skipped one
+                // For subsequent rows, use normal calculation
+                int row = i / 7;
+                int col = i % 7; 
                 position = 9 + col + (row * 9);
             }
             
