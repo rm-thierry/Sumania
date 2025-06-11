@@ -35,8 +35,7 @@ public class ReloadCommand implements CommandExecutor {
                 if (sender instanceof Player) {
                     plugin.getAPI().getPlayerAPI().sendMessage(
                             (Player) sender,
-                            "general.no-permission",
-                            null
+                            "general.no-permission"
                     );
                 } else {
                     sender.sendMessage("§cYou don't have permission to do that.");
@@ -51,8 +50,7 @@ public class ReloadCommand implements CommandExecutor {
             if (sender instanceof Player) {
                 plugin.getAPI().getPlayerAPI().sendMessage(
                         (Player) sender,
-                        "general.reload-success",
-                        null
+                        "general.reload-success"
                 );
             } else {
                 sender.sendMessage("§aAll configuration files have been reloaded.");

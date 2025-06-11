@@ -224,6 +224,15 @@ public class PlayerAPI {
     }
     
     /**
+     * Send a message to a player without replacements
+     * @param player The player
+     * @param path The path to the message in messages.yml
+     */
+    public void sendMessage(Player player, String path) {
+        sendMessage(player, path, new HashMap<>());
+    }
+    
+    /**
      * Send a message to a command sender
      * @param sender The command sender
      * @param path The path to the message in messages.yml
@@ -239,6 +248,15 @@ public class PlayerAPI {
             // Add prefix to the message
             sender.sendMessage(prefix + getMessage(path, replacements));
         }
+    }
+    
+    /**
+     * Send a message to a command sender without replacements
+     * @param sender The command sender
+     * @param path The path to the message in messages.yml
+     */
+    public void sendMessage(CommandSender sender, String path) {
+        sendMessage(sender, path, new HashMap<>());
     }
     
     /**
@@ -266,6 +284,15 @@ public class PlayerAPI {
         
         // Add prefix to the message
         return prefix + getMessage(path, replacements);
+    }
+    
+    /**
+     * Format a message with the prefix without replacements
+     * @param path The path to the message in messages.yml
+     * @return The formatted message with prefix
+     */
+    public String formatMessage(String path) {
+        return formatMessage(path, new HashMap<>());
     }
     
     /**

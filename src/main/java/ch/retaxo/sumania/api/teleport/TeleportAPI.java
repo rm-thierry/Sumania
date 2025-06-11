@@ -107,8 +107,7 @@ public class TeleportAPI {
                 if (!isRandomTeleport) {
                     plugin.getAPI().getPlayerAPI().sendMessage(
                             player,
-                            "teleport.teleport-success",
-                            null
+                            "teleport.teleport-success"
                     );
                 }
                 
@@ -221,8 +220,7 @@ public class TeleportAPI {
         if (!teleportRequests.containsKey(playerUUID)) {
             plugin.getAPI().getPlayerAPI().sendMessage(
                     player,
-                    "teleport.teleport-no-requests",
-                    null
+                    "teleport.teleport-no-requests"
             );
             
             return false;
@@ -270,8 +268,7 @@ public class TeleportAPI {
         if (!teleportRequests.containsKey(playerUUID)) {
             plugin.getAPI().getPlayerAPI().sendMessage(
                     player,
-                    "teleport.teleport-no-requests",
-                    null
+                    "teleport.teleport-no-requests"
             );
             
             return false;

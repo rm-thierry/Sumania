@@ -299,7 +299,7 @@ public class ClaimManagementMenu implements Listener {
                 meta.setDisplayName("§a§l" + (offlinePlayer.getName() != null ? offlinePlayer.getName() : "Unbekannt"));
                 
                 List<String> lore = new ArrayList<>();
-                lore.add("§7Klicke, um diesen Spieler " + (inventory.getTitle().contains("hinzufügen") ? "hinzuzufügen" : "zu entfernen"));
+                lore.add("§7Klicke, um diesen Spieler " + (player.getOpenInventory().getTitle().contains("hinzufügen") ? "hinzuzufügen" : "zu entfernen"));
                 
                 meta.setLore(lore);
                 playerHead.setItemMeta(meta);
