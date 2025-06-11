@@ -153,6 +153,32 @@ public class AuctionMenuHandler implements Listener {
      * @param player The player
      */
     public void openMainMenu(Player player) {
+        // Default to page 0
+        openMainMenu(player, 0);
+    }
+    
+    /**
+     * Open the main auction house menu with pagination
+     * @param player The player
+     * @param page The page to display
+     */
+    public void openMainMenu(Player player, int page) {
+        // Get all auctions
+        List<Auction> recentAuctions = auctionAPI.getActiveAuctions();
+        
+        // Calculate available item slots per page
+        int availableSlots = (mainMenuRows - 2) * 7;
+        
+        // Calculate pages
+        int totalPages = (int) Math.ceil((double) recentAuctions.size() / availableSlots);
+        if (totalPages == 0) totalPages = 1;
+        if (page < 0) page = 0;
+        if (page >= totalPages) page = totalPages - 1;
+        
+        // Update the player's current page
+        auctionCommand.setViewingPage(player, page);
+        auctionCommand.setViewingCategory(player, null); // Reset category when in main menu
+        
         // Create inventory
         Inventory menu = Bukkit.createInventory(null, mainMenuRows * 9, mainMenuTitle);
         
@@ -212,27 +238,78 @@ public class AuctionMenuHandler implements Listener {
         categories = setMenuAction(categories, "categories");
         menu.setItem(6, categories);
         
-        // Add recent auctions - use all available slots within the border
-        List<Auction> recentAuctions = auctionAPI.getActiveAuctions();
-        int maxAuctions = Math.min(recentAuctions.size(), (mainMenuRows - 2) * 7 - 1);
+        // Add auctions for current page
+        int start = page * availableSlots;
+        int end = Math.min(start + availableSlots, recentAuctions.size());
         
-        // Start from slot 10 (first item in first row after border) and maintain proper spacing
-        for (int i = 0; i < maxAuctions; i++) {
-            Auction auction = recentAuctions.get(i);
-            ItemStack auctionItem = createAuctionItem(auction);
-            
-            // Calculate position - start with slot 10 in the first row
-            int position;
-            if (i < 7) {
-                position = 10 + i; // slots 10-16 in first row
-            } else {
-                // For subsequent rows, use normal calculation
-                int row = i / 7;
-                int col = i % 7; 
-                position = 10 + col + (row * 9);
+        if (recentAuctions.isEmpty()) {
+            // No auctions available
+            ItemStack noAuctions = createMenuItem(Material.BARRIER, 
+                    warningColor + "Keine Auktionen", 
+                    Arrays.asList(
+                        primaryColor + "Es gibt keine aktiven Auktionen",
+                        primaryColor + "im Auktionshaus."
+                    ));
+            menu.setItem(22, noAuctions);
+        } else {
+            // Display auctions for current page
+            int slot = 0;
+            for (int i = start; i < end; i++) {
+                Auction auction = recentAuctions.get(i);
+                ItemStack auctionItem = createAuctionItem(auction);
+                
+                // Calculate position - start with slot 10 in the first row
+                int position;
+                if (slot < 7) {
+                    position = 10 + slot; // slots 10-16 in first row
+                } else {
+                    // For subsequent rows, use normal calculation
+                    int row = slot / 7;
+                    int col = slot % 7; 
+                    position = 10 + col + (row * 9);
+                }
+                
+                menu.setItem(position, auctionItem);
+                slot++;
             }
-            
-            menu.setItem(position, auctionItem);
+        }
+        
+        // Add pagination controls in the bottom row
+        // Previous page button
+        if (page > 0) {
+            ItemStack prevPage = createMenuItem(previousPageItem, 
+                    highlightColor + "Vorherige Seite", 
+                    Arrays.asList(
+                        primaryColor + "Zeigt die vorherige Seite an.",
+                        "",
+                        secondaryColor + "» " + primaryColor + "Klicke, um zur vorherigen Seite zu gehen"
+                    ));
+            prevPage = setMenuAction(prevPage, "main_prev_page");
+            prevPage = setValue(prevPage, String.valueOf(page - 1));
+            menu.setItem((mainMenuRows - 1) * 9 + 3, prevPage);
+        }
+        
+        // Page indicator
+        ItemStack pageIndicator = createMenuItem(Material.PAPER, 
+                highlightColor + "Seite " + (page + 1) + "/" + totalPages, 
+                Arrays.asList(
+                    primaryColor + "Du befindest dich auf Seite " + (page + 1),
+                    primaryColor + "von " + totalPages + " Seiten."
+                ));
+        menu.setItem((mainMenuRows - 1) * 9 + 4, pageIndicator);
+        
+        // Next page button
+        if (page < totalPages - 1) {
+            ItemStack nextPage = createMenuItem(nextPageItem, 
+                    highlightColor + "Nächste Seite", 
+                    Arrays.asList(
+                        primaryColor + "Zeigt die nächste Seite an.",
+                        "",
+                        secondaryColor + "» " + primaryColor + "Klicke, um zur nächsten Seite zu gehen"
+                    ));
+            nextPage = setMenuAction(nextPage, "main_next_page");
+            nextPage = setValue(nextPage, String.valueOf(page + 1));
+            menu.setItem((mainMenuRows - 1) * 9 + 5, nextPage);
         }
         
         // Open the menu
@@ -1937,6 +2014,36 @@ public class AuctionMenuHandler implements Listener {
                                             auctionAPI.getAuctionsByCategory(currentCategory), prevPage);
                                 }, 2L);
                             }
+                        } catch (NumberFormatException e) {
+                            player.sendMessage(plugin.getConfigManager().getPrefix() + warningColor + "Ungültige Seite.");
+                        }
+                    }
+                    break;
+                case "main_next_page":
+                    // Go to next page in main menu
+                    String mainNextPageStr = getValue(clickedItem);
+                    if (mainNextPageStr != null) {
+                        try {
+                            int mainNextPage = Integer.parseInt(mainNextPageStr);
+                            auctionCommand.setViewingPage(player, mainNextPage);
+                            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                                openMainMenu(player, mainNextPage);
+                            }, 2L);
+                        } catch (NumberFormatException e) {
+                            player.sendMessage(plugin.getConfigManager().getPrefix() + warningColor + "Ungültige Seite.");
+                        }
+                    }
+                    break;
+                case "main_prev_page":
+                    // Go to previous page in main menu
+                    String mainPrevPageStr = getValue(clickedItem);
+                    if (mainPrevPageStr != null) {
+                        try {
+                            int mainPrevPage = Integer.parseInt(mainPrevPageStr);
+                            auctionCommand.setViewingPage(player, mainPrevPage);
+                            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                                openMainMenu(player, mainPrevPage);
+                            }, 2L);
                         } catch (NumberFormatException e) {
                             player.sendMessage(plugin.getConfigManager().getPrefix() + warningColor + "Ungültige Seite.");
                         }
