@@ -1421,12 +1421,25 @@ public class AuctionMenuHandler implements Listener {
         Player player = (Player) event.getWhoClicked();
         ItemStack clickedItem = event.getCurrentItem();
         
-        // Add debug for all inventory clicks
+        // Add detailed debug for all inventory clicks
         plugin.getLogger().info("Inventory click by " + player.getName() + " in inventory: " + event.getView().getTitle());
         if (clickedItem != null && clickedItem.getType() != Material.AIR) {
             String action = getMenuAction(clickedItem);
             int auctionId = getAuctionId(clickedItem);
             plugin.getLogger().info("Clicked item: " + clickedItem.getType() + " with action: " + action + " and auction ID: " + auctionId);
+            
+            // Add more details for troubleshooting
+            if (action != null && action.equals("confirm_purchase")) {
+                plugin.getLogger().info("CONFIRMED PURCHASE: Player " + player.getName() + " confirmed purchase of auction ID: " + auctionId);
+                if (auctionId != -1) {
+                    Auction auction = auctionAPI.getAuction(auctionId);
+                    if (auction != null) {
+                        plugin.getLogger().info("Auction details: Price=" + auction.getPrice() + ", Seller=" + auction.getSellerName() + ", Active=" + auction.isActive());
+                    } else {
+                        plugin.getLogger().warning("Could not find auction with ID: " + auctionId);
+                    }
+                }
+            }
         }
         
         // Check if inventory is an auction house menu
@@ -1483,7 +1496,7 @@ public class AuctionMenuHandler implements Listener {
                     // Buy an auction
                     int auctionId1 = getAuctionId(clickedItem);
                     if (auctionId1 != -1) {
-                        Auction auction = auctionAPI.getAuction(auctionId);
+                        Auction auction = auctionAPI.getAuction(auctionId1);
                         if (auction != null && auction.isActive()) {
                             // Check if player is the seller
                             if (auction.getSellerUuid().equals(player.getUniqueId())) {
@@ -1506,28 +1519,41 @@ public class AuctionMenuHandler implements Listener {
                     // Confirm purchase of an auction
                     int confirmAuctionId = getAuctionId(clickedItem);
                     if (confirmAuctionId != -1) {
-                        Auction auction = auctionAPI.getAuction(confirmAuctionId);
-                        if (auction != null && auction.isActive()) {
-                            // Add debug to see if we're getting here
-                            plugin.getLogger().info("Player " + player.getName() + " attempting to purchase auction " + confirmAuctionId);
-                            if (auctionAPI.purchaseAuction(auction, player)) {
+                        try {
+                            // Add extra debug to trace the issue
+                            plugin.getLogger().info("Confirming purchase of auction ID: " + confirmAuctionId);
+                            
+                            Auction auction = auctionAPI.getAuction(confirmAuctionId);
+                            if (auction != null && auction.isActive()) {
+                                // Add debug to see if we're getting here
+                                plugin.getLogger().info("Player " + player.getName() + " attempting to purchase auction " + confirmAuctionId);
+                                if (auctionAPI.purchaseAuction(auction, player)) {
+                                    player.closeInventory();
+                                    player.sendMessage(plugin.getConfigManager().getPrefix() + highlightColor + "Du hast die Auktion erfolgreich gekauft!");
+                                    // Return to main menu after successful purchase
+                                    Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                                        openMainMenu(player);
+                                    }, 2L);
+                                } else {
+                                    player.sendMessage(plugin.getConfigManager().getPrefix() + warningColor + "Du konntest die Auktion nicht kaufen. Überprüfe, ob du genug Geld hast und ob dein Inventar nicht voll ist.");
+                                }
+                            } else {
+                                player.sendMessage(plugin.getConfigManager().getPrefix() + warningColor + "Diese Auktion ist nicht mehr verfügbar.");
                                 player.closeInventory();
-                                player.sendMessage(plugin.getConfigManager().getPrefix() + highlightColor + "Du hast die Auktion erfolgreich gekauft!");
-                                // Return to main menu after successful purchase
+                                // Return to main menu after a short delay
                                 Bukkit.getScheduler().runTaskLater(plugin, () -> {
                                     openMainMenu(player);
                                 }, 2L);
-                            } else {
-                                player.sendMessage(plugin.getConfigManager().getPrefix() + warningColor + "Du konntest die Auktion nicht kaufen. Überprüfe, ob du genug Geld hast und ob dein Inventar nicht voll ist.");
                             }
-                        } else {
-                            player.sendMessage(plugin.getConfigManager().getPrefix() + warningColor + "Diese Auktion ist nicht mehr verfügbar.");
+                        } catch (Exception e) {
+                            plugin.getLogger().severe("Error confirming auction purchase: " + e.getMessage());
+                            e.printStackTrace();
+                            player.sendMessage(plugin.getConfigManager().getPrefix() + warningColor + "Es ist ein Fehler beim Kauf aufgetreten. Bitte versuche es erneut.");
                             player.closeInventory();
-                            // Return to main menu after a short delay
-                            Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                                openMainMenu(player);
-                            }, 2L);
                         }
+                    } else {
+                        plugin.getLogger().warning("Invalid auction ID from clicked item");
+                        player.sendMessage(plugin.getConfigManager().getPrefix() + warningColor + "Ungültige Auktions-ID. Bitte versuche es erneut.");
                     }
                     break;
                 case "cancel_purchase":
@@ -1850,74 +1876,80 @@ public class AuctionMenuHandler implements Listener {
      * @param auction The auction to purchase
      */
     public void openPurchaseConfirmationMenu(Player player, Auction auction) {
-        // Create inventory
-        Inventory menu = Bukkit.createInventory(null, 3 * 9, mainMenuTitle + " - Kaufbestätigung");
-        
-        // Add border items
-        for (int i = 0; i < 9; i++) {
-            menu.setItem(i, createMenuItem(borderItem, " ", null));
-        }
-        for (int i = 18; i < 27; i++) {
-            menu.setItem(i, createMenuItem(borderItem, " ", null));
-        }
-        menu.setItem(9, createMenuItem(borderItem, " ", null));
-        menu.setItem(17, createMenuItem(borderItem, " ", null));
-        
-        // Create a display item with auction details
-        ItemStack auctionItem = auction.getItem().clone();
-        ItemMeta meta = auctionItem.getItemMeta();
-        List<String> lore = meta.getLore();
-        if (lore == null) {
-            lore = new ArrayList<>();
-        }
-        
-        // Add auction info to lore
-        if (!lore.isEmpty()) {
+        try {
+            // Create inventory
+            Inventory menu = Bukkit.createInventory(null, 3 * 9, mainMenuTitle + " - Kaufbestätigung");
+            
+            // Add border items
+            for (int i = 0; i < 9; i++) {
+                menu.setItem(i, createMenuItem(borderItem, " ", null));
+            }
+            for (int i = 18; i < 27; i++) {
+                menu.setItem(i, createMenuItem(borderItem, " ", null));
+            }
+            menu.setItem(9, createMenuItem(borderItem, " ", null));
+            menu.setItem(17, createMenuItem(borderItem, " ", null));
+            
+            // Create a display item with auction details
+            ItemStack auctionItem = auction.getItem().clone();
+            ItemMeta meta = auctionItem.getItemMeta();
+            List<String> lore = meta.getLore();
+            if (lore == null) {
+                lore = new ArrayList<>();
+            }
+            
+            // Add auction info to lore
+            if (!lore.isEmpty()) {
+                lore.add("");
+            }
+            
+            lore.add(priceColor + "Preis: " + priceFormat.format(auction.getPrice()) + " " + plugin.getAPI().getEconomyAPI().getCurrencyName());
+            lore.add(sellerColor + "Verkäufer: " + auction.getSellerName());
+            lore.add(timeColor + "Verbleibend: " + auction.getFormattedRemainingTime());
             lore.add("");
+            lore.add(highlightColor + "Auktions-ID: " + auction.getId());
+            
+            meta.setLore(lore);
+            auctionItem.setItemMeta(meta);
+            
+            // Add auction ID to item
+            auctionItem = setAuctionId(auctionItem, auction.getId());
+            
+            // Add item to menu
+            menu.setItem(13, auctionItem);
+            
+            // Add confirm button
+            ItemStack confirm = createMenuItem(confirmItem, 
+                    highlightColor + "Kaufen", 
+                    Arrays.asList(
+                        primaryColor + "Kaufe dieses Item für " + priceColor + priceFormat.format(auction.getPrice()) + " " + plugin.getAPI().getEconomyAPI().getCurrencyName() + primaryColor + ".",
+                        "",
+                        secondaryColor + "» " + primaryColor + "Klicke, um den Kauf zu bestätigen"
+                    ));
+            confirm = setMenuAction(confirm, "confirm_purchase");
+            confirm = setAuctionId(confirm, auction.getId());
+            // Log the created button for debugging
+            plugin.getLogger().info("Creating purchase confirmation with ID:" + auction.getId() + " and auction: " + getMenuAction(confirm));
+            menu.setItem(11, confirm);
+            
+            // Add cancel button
+            ItemStack cancel = createMenuItem(cancelItem, 
+                    warningColor + "Abbrechen", 
+                    Arrays.asList(
+                        primaryColor + "Bricht den Kauf ab.",
+                        "",
+                        secondaryColor + "» " + primaryColor + "Klicke, um den Kauf abzubrechen"
+                    ));
+            cancel = setMenuAction(cancel, "cancel_purchase");
+            menu.setItem(15, cancel);
+            
+            // Open the menu
+            player.openInventory(menu);
+        } catch (Exception e) {
+            plugin.getLogger().severe("Error opening purchase confirmation menu: " + e.getMessage());
+            e.printStackTrace();
+            player.sendMessage(plugin.getConfigManager().getPrefix() + "§cEs ist ein Fehler aufgetreten. Bitte versuche es erneut.");
         }
-        
-        lore.add(priceColor + "Preis: " + priceFormat.format(auction.getPrice()) + " " + plugin.getAPI().getEconomyAPI().getCurrencyName());
-        lore.add(sellerColor + "Verkäufer: " + auction.getSellerName());
-        lore.add(timeColor + "Verbleibend: " + auction.getFormattedRemainingTime());
-        lore.add("");
-        lore.add(highlightColor + "Auktions-ID: " + auction.getId());
-        
-        meta.setLore(lore);
-        auctionItem.setItemMeta(meta);
-        
-        // Add auction ID to item
-        auctionItem = setAuctionId(auctionItem, auction.getId());
-        
-        // Add item to menu
-        menu.setItem(13, auctionItem);
-        
-        // Add confirm button
-        ItemStack confirm = createMenuItem(confirmItem, 
-                highlightColor + "Kaufen", 
-                Arrays.asList(
-                    primaryColor + "Kaufe dieses Item für " + priceColor + priceFormat.format(auction.getPrice()) + " " + plugin.getAPI().getEconomyAPI().getCurrencyName() + primaryColor + ".",
-                    "",
-                    secondaryColor + "» " + primaryColor + "Klicke, um den Kauf zu bestätigen"
-                ));
-        confirm = setMenuAction(confirm, "confirm_purchase");
-        confirm = setAuctionId(confirm, auction.getId());
-        // Log the created button for debugging
-        plugin.getLogger().info("Creating purchase confirm button with ID: " + auction.getId() + " and action: " + getMenuAction(confirm));
-        menu.setItem(11, confirm);
-        
-        // Add cancel button
-        ItemStack cancel = createMenuItem(cancelItem, 
-                warningColor + "Abbrechen", 
-                Arrays.asList(
-                    primaryColor + "Bricht den Kauf ab.",
-                    "",
-                    secondaryColor + "» " + primaryColor + "Klicke, um den Kauf abzubrechen"
-                ));
-        cancel = setMenuAction(cancel, "cancel_purchase");
-        menu.setItem(15, cancel);
-        
-        // Open the menu
-        player.openInventory(menu);
     }
 
     /**
